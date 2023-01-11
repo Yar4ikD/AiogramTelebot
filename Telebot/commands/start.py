@@ -20,4 +20,4 @@ async def information_bot(message: types.Message):
 
 def register_command_start(dp: Dispatcher):
 
-    dp.register_message_handler(information_bot, commands=['start'])
+    dp.register_message_handler(information_bot, commands=['hello-world', 'Привет'])
