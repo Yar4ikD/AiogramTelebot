@@ -1,71 +1,105 @@
-import asyncio
+"""
+    Модуль для работы с GET-запросами.
+    Запрос к API - Расписание рейсов по станции.
+"""
+
 import datetime
-import json
-import requests
+from loguru import logger
 from config import YANDEX_API_KEY
-from typing import Dict
+from typing import Dict, Optional
+from .base_get_requests import get_request
 
 
-async def get_list_of_flights_with_description(station: str, direction: str = '', transport: str = 'suburban',
-                                               event: str = 'arrival',
-                                               date=datetime.datetime.today()
-                                               ) -> str:
+async def request(station_code: str, date=datetime.datetime.today(), transport: str = 'suburban',
+                  event: str = 'arrival') -> Optional[str]:
+    """
+    Функция создает параметры для GET запроса, API Расписание рейсов по станции(словарь), из полученных аргументов.
+    Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
+    params(словарь) и url. Переменная url - это адрес GET-запроса к API Яндекс Расписаний.
 
-    print(f'work > api requests {station}')
+    Если результат функции get_request - None, возвращает None
+
+    Если результат функции get_request - not None, возвращает результат работы функции forming_response,
+    с передачей ей в качестве аргумента результат функции get_request.
+    Args:
+        station_code: Передает код станции в населенном пункте
+        date: Передает дату
+        transport: Передает тип транспорта
+        event: Передает направление транспорта со станции
+
+    Returns: forming_response or None
+    """
+    params = {
+        'apikey': YANDEX_API_KEY,
+        'station': station_code,
+        'format': 'json',
+        'date': date,
+        'transport_types': transport,
+        'event': event,
+        'direction': 'all',
+        # 'result_timezone': 'Europe/Moscow'
+    }
+    url = 'https://api.rasp.yandex.net/v3.0/schedule/'
+    result = await get_request(url=url, params=params)
+
+    if result:
+        return forming_response(data=result)
+    return None
+
+
+def forming_response(data: Dict) -> Optional[str]:
+    """
+    Функция извлекает и структурирует информацию. Принимает аргумент - словарь.
+    В словаре данные полученные из GET запроса к API Яндекс Расписаний, раздел - Расписание рейсов по станции.
+    Возвращает строку структурированных данных, или None если отсутствуют ключи в словаре.
+
+    Args:
+        data: Передает данные, полученные из GET запроса.
+
+    Returns: result
+    Raises:
+        Exception: При ошибке работе цикла
+    """
+    limit = 20
     try:
-        req = requests.get(f'https://api.rasp.yandex.net/v3.0/schedule/?'
-                           f'apikey={YANDEX_API_KEY}'
-                           f'&station={station}'
-                           f'&transport_types={transport}'
-                           # f'&direction={direction}'
-                           f'&event={event}'
-                           f'&date={date}'
+        result = ''
+        if data.get('station').get('title'):
+            result += '<b>Станция:</b>\n{data}\n'.format(data=data.get('station').get('title'))
+        if data.get('station').get('station_type_name'):
+            result += '<b>Тип станции:</b> {data}\n'.format(data=data.get('station').get('station_type_name'))
+        if data.get('date'):
+            result += '<b>Дата:</b> {date}\n'.format(date=data.get('date'))
 
-                           )
-
-        if req.status_code != 200:
-            raise requests.RequestException(f'Статус код > {req.status_code}')
-
-    except requests.RequestException as err:
-        print(f'Ошибка ответа сервера!\n{err}')
-        return 'Упс... что то пошло не так, при запросе к серверу.'
-
-    else:
-        data = json.loads(req.text)
-        return await forming_response(data)
-
-
-async def forming_response(data: Dict, limit: int = 10) -> str:
-    result = ''
-    count = 0
-    try:
-        date = '<b>Дата:</b> {date}'.format(date=data.get('date', 'Время не указанно.'))
-        info_station = '<b>Название станции:</b>\n{data}'.format(data=data.get('station', {}).get('title', None))
-        station_type_name = '<b>Тип станции:</b> {data}\n'.format(data=data.get('station', {}).get('station_type_name', None))
-        result = '\n'.join((date, info_station, station_type_name))
-
-        for value in data.get('schedule'):
+        for count, value in enumerate(data.get('schedule')):
             if count >= limit:
                 break
 
-            number = 'Номер рейса: {data}'.format(data=value.get('thread').get('number', 'Отсутствует.'))
-            title = 'Название нитки:\n{data}'.format(data=value.get('thread').get('title', 'Отсутствует.'))
-            carrier = 'Перевозчик:\n{data}'.format(data=value.get('thread').get('carrier').get('title', '-'))
-            code = 'Код перевозчика: {data}'.format(data=value.get('thread').get('carrier').get('code', '-'))
-            platform = 'Платформа или путь, с которого отправляется рейс:\n{data}'.format(data=value.get('platform', '-'))
-            terminal = 'Терминал аэропорта:\n{data}'.format(data=value.get('terminal', '-'))
-            days = 'Дни курсирования нитки\n{data}'.format(data=value.get('days', '-'))
-            except_days = 'Дни, в которые нитка не курсирует\n{data}'.format(data=value.get('except_days', '-'))
-            departure = 'Время отправления:\n{data}'.format(data=value.get('departure', '-'))
-            arrival = 'Время прибытия:\n{data}'.format(data=value.get('arrival', '-'))
+            if value.get('thread').get('title'):
+                result += '\nНазвание нитки:\n{data}\n'.format(data=value.get('thread').get('title'))
+            if value.get('thread').get('number'):
+                result += 'Номер рейса: {data}\n'.format(data=value.get('thread').get('number'))
 
-            result += '\n'.join((number, title, carrier, code, platform, terminal, days, except_days, departure, arrival))
-            count += 1
+            if value.get('terminal'):
+                result += 'Терминал аэропорта: {data}\n'.format(data=value.get('terminal'))
+            if value.get('platform'):
+                result += 'Платформа отправления рейса:\n{data}\n'.format(data=value.get('platform'))
+
+            if value.get('departure'):
+                result += 'Время отправления:\n{data}\n'.format(data=value.get('departure'))
+            if value.get('arrival'):
+                result += 'Время прибытия:\n{data}\n'.format(data=value.get('arrival'))
+            if value.get('days'):
+                result += 'Дни курсирования нитки: {data}\n'.format(data=value.get('days'))
+
+            if value.get('thread').get('carrier').get('title'):
+                result += 'Перевозчик:\n{data}\n'.format(data=value.get('thread').get('carrier').get('title'))
+            if value.get('thread').get('vehicle'):
+                result += 'Транспортное средство:\n{data}\n'.format(data=value.get('thread').get('vehicle'))
+            if value.get('thread').get('transport_subtype').get('title'):
+                result += '{data}\n'.format(data=value.get('thread').get('transport_subtype').get('title'))
+
         return result
 
     except Exception as err:
-        print(f'Ошибка!\n{err}')
-        result = 'Упс... что то пошло не так, при запросе к серверу.'
-
-    finally:
-        return result
+        logger.exception(err)
+        return None

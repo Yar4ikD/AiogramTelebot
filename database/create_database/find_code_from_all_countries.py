@@ -3,7 +3,7 @@ import json
 from typing import Dict, Any, List
 from config import ALL_COUNTRIES_CODE_JSON_PATH
 from python_basic_diploma.api.get_all_countries_code import get_code_create_file_json
-from insert_into_db import writing_to_database
+from .insert_into_db import writing_to_database
 
 """ Этот модуль предназначен для использования как отдельного сценария. """
 

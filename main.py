@@ -1,20 +1,25 @@
 from aiogram import executor
 from loader import dp
-from commands import start, station_timetable, list_nearest_stations
+from commands import base_command, station_timetable, list_nearest_stations, schedule_flights_between_cities
 from database.CRUD_db import YandexDB
+from loguru import logger
+
+logger.add(sink='logg.log', format="{time:YYYY-MM-DD HH:mm:ss} {level} {message}",
+           rotation="50 MB", retention="1 day", compression='zip')
 
 
+@logger.catch()
 async def on_start(_) -> None:
-    """ Функция, выводит на экран консоли сообщения, что бот работает.
+    """ Функция, выводит в консоль сообщения, что бот работает.
         Установляивет соединения с БД.
         Запускает функции, для регистрации обработчиков команд ТГ-бота
     """
-    print('Бот начал работать')
+    logger.info('Bot start work')
     await YandexDB.connect_db()
-    await start.register_command_start(dp)
-    await station_timetable.register_command_timetable(dp)
-    await list_nearest_stations.register_command_nearest_station(dp)
-
+    await base_command.register_command(dp)
+    await schedule_flights_between_cities.Command.register_command(dp)
+    await station_timetable.Command.register_command(dp)
+    await list_nearest_stations.Station.register_command(dp)
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_start)

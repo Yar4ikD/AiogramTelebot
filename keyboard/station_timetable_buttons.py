@@ -1,47 +1,70 @@
+"""Модуль отвечает за создание клавиатуры и кнопок ТГ-бота, команды Расписание рейсов по станции."""
+
 import emoji
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from .base import UniversalButtons
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram import types
 
 
-def tru_or_false() -> types.ReplyKeyboardMarkup:
+class Buttons(UniversalButtons):
+    """
+        Класс наследует от базового класса UniversalButtons.
+        Класс отвечает за создание кнопок и клавиатуры ТГ-Бота.
+    """
+    event_and_transport = {
+        'Cамолет/Прибытие': ('plane', 'arrival'), 'Cамолет/Отправление': ('plane', 'departure'),
+        'Поезд/Прибытие': ('train', 'arrival'), 'Поезд/Отправление': ('train', 'departure'),
+        'Электричка/Прибытие': ('suburban', 'arrival'), 'Электричка/Отправление': ('suburban', 'departure'),
+        'Автобус/Прибытие': ('bus', 'arrival'), 'Автобус/Отправление': ('bus', 'departure')
+                           }
+    but_list_stations = KeyboardButton(f'Показать список станций{emoji.emojize(":card_file_box:")}')
 
-    but_1 = KeyboardButton('Продолжить!')
-    # but_2 = KeyboardButton('Выйти')
+    @classmethod
+    def event_transport(cls) -> types.ReplyKeyboardMarkup:
+        """
+        Метод класса создает кнопки ТГ-Бота, тип транспортного средства, и направление.
+        Returns: buttons
 
-    button = ReplyKeyboardMarkup(
-        resize_keyboard=True,
-        input_field_placeholder='Выбери один из вариантов:',
-        one_time_keyboard=True
-    )
-    button.add(but_1)#.add(but_2)
+        """
+        but = (KeyboardButton(text=text) for text in cls.event_and_transport)
+        buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2, one_time_keyboard=False).add(*but)
+        return buttons
 
-    return button
+    @classmethod
+    def tru_continue(cls) -> types.ReplyKeyboardMarkup:
+        """
+        Метод класса создает кнопки ТГ-Бота. Кнопки: Продолжить, Вернуться назад, Выход из команды.
+        Returns: buttons
+        """
+        buttons = ReplyKeyboardMarkup(resize_keyboard=True)
+        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out_k)
+        return buttons
 
+    @classmethod
+    def show_list(cls) -> types.ReplyKeyboardMarkup:
+        """
+        Метод класса, создает кнопку ТГ-бота: Список станций населенного пункта
+        Returns: button
+        """
+        button = ReplyKeyboardMarkup(resize_keyboard=True)
+        button.add(cls.but_list_stations).add(cls.but_step_back).add(cls.but_out_k)
+        return button
 
-def show_list() -> types.ReplyKeyboardMarkup:
+    @classmethod
+    def button_result(cls) -> types.ReplyKeyboardMarkup:
+        """
+        Метод класса, создает кнопку ТГ-бота: Список команд, Вернутся назад, Выход.
+        Кнопки для конечного состояния команды бота.
+        Returns: button
+        """
+        buttons = ReplyKeyboardMarkup(resize_keyboard=True)
+        buttons.add(cls.but_list_command)
+        return buttons
 
-    but_1 = KeyboardButton('Показать список станций.')
-    # but_2 = KeyboardButton('Выйти')
+    @classmethod
+    def output(cls) -> types.ReplyKeyboardMarkup:
+        buttons = ReplyKeyboardMarkup(resize_keyboard=True)
+        buttons.add(cls.but_step_back).add(cls.but_out_k)
 
-    button = ReplyKeyboardMarkup(
-        # resize_keyboard=True,
-        # input_field_placeholder='Введите название или Выбери один из вариантов:',
-        # one_time_keyboard=True
-    )
-    button.add(but_1)#.add(but_2)
-
-    return button
-
-
-def output() -> types.InlineKeyboardMarkup:
-
-    but_1 = InlineKeyboardButton(f'Выйти {emoji.emojize(":stop_sign:")}', callback_data='out')
-
-    button = InlineKeyboardMarkup(row_width=1)
-        # resize_keyboard=True,
-        # one_time_keyboard=True
-    # )
-    button.add(but_1)
-
-    return button
+        return buttons
 

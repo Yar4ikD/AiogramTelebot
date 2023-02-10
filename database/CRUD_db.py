@@ -1,12 +1,13 @@
+"""
+    Модуль для работы с БД.
+    СУБД - SQLite3
+"""
+
 import sqlite3 as sq
 import aiosqlite
-from typing import List, Tuple, Optional
+from typing import Tuple, Optional
+from loguru import logger
 from config import DB_PATH
-
-"""
-Модуль для работы с БД.
-СУБД - SQLite3
-"""
 
 
 class YandexDB:
@@ -30,7 +31,7 @@ class YandexDB:
         Создает БД с расширением db и производится подключение к конкретной БД.
         Создается курсор из соединения с БД
 
-        :param name_db: Передает имя файла БД, по умолчанию "code_rus".
+        :param name_db: Передает имя файла БД, по умолчанию "code_rus"
         :type name_db: str
         """
         if name_db.endswith('.db'):
@@ -96,51 +97,25 @@ class YandexDB:
         self.__base.commit()
 
     @classmethod
-    async def select_region_or_settlement(cls, user_msg: str, type_query: str, table: str = TABLE):
-
-        query = None
-        if type_query == 'region':
-
-            query = f"""SELECT {cls.REGION_CODES}, {cls.REGION_TITLE} FROM {table} 
-            WHERE {cls.REGION_TITLE} LIKE '{user_msg}%' OR {cls.REGION_TITLE} LIKE '%{user_msg}' 
-            """
-
-        elif type_query == 'settlement':
-            query = f"SELECT {cls.CODES_SETTLE}, {cls.TITLE_SETTLE} FROM {table} " \
-                    f"WHERE {cls.TITLE_SETTLE} LIKE '%{user_msg}%' OR {cls.DIRECTION} LIKE '%{user_msg}%' " \
-                    f"AND ({cls.STATION_TYPE} LIKE 'station' OR {cls.STATION_TYPE} LIKE 'train_station' " \
-                    f"OR {cls.STATION_TYPE} LIKE 'bus_station' OR {cls.STATION_TYPE} LIKE 'airport')"
-        else:
-            return None
-
-        cursor = await cls.base.execute(query)
-        row = await cursor.fetchone()
-        return row
-
-    @classmethod
-    async def select_list_station(cls, region_code: str, settlement_code: str, table: str = TABLE, limit=None):
-
-        query = f'SELECT {cls.TITLE}, {cls.STATION_TYPE}, {cls.TRANSPORT_TYPE} FROM {table} WHERE ' \
-                f'({cls.REGION_CODES} = "{region_code}" AND {cls.CODES_SETTLE} = "{settlement_code}") ' \
-                f'AND ({cls.STATION_TYPE} LIKE "station" OR {cls.STATION_TYPE} LIKE "train_station" ' \
-                f'OR {cls.STATION_TYPE} LIKE "bus_station" OR {cls.STATION_TYPE} LIKE "airport")'
-
-        cursor = await cls.base.execute(query)
-        rows = await cursor.fetchmany(size=15)
-
-        return rows
-
-    @classmethod
-    async def select_yandex_code(cls, user_msg: str, region: str, settlement: str, table: str = TABLE, limit: int = 10):
-
-        query = f"""
-        SELECT {cls.YANDEX_CODE}, {cls.TITLE} FROM {table} WHERE {cls.REGION_CODES} LIKE '{region}' 
-        AND {cls.CODES_SETTLE} LIKE '{settlement}' AND {cls.TITLE} LIKE '%{user_msg}%' 
-        LIMIT {limit}
+    async def select_region(cls, user_msg: str) -> Optional[Tuple]:
         """
+        Метод класса делает запрос к БД, для получения кода региона, поле БД REGION_CODES
+        Args:
+            user_msg: Передает название региона.
 
-        cursor = await cls.base.execute(query)
-        row = await cursor.fetchone()
-        print(row)
-        return row
+        Returns: row
+        Raises:
+            aiosqlite.Error: При ошибки запроса к БД.
+        """
+        try:
+            table = cls.TABLE
+            value = (f'%{user_msg}%', f'%{user_msg}')
+            query = f"SELECT {cls.REGION_CODES}, {cls.REGION_TITLE} FROM {table} " \
+                    f"WHERE {cls.REGION_TITLE} LIKE ? OR {cls.REGION_TITLE} LIKE ?"
 
+            cursor = await cls.base.execute(query, value)
+            row = await cursor.fetchone()
+            return row
+        except aiosqlite.Error as err:
+            logger.error(err)
+            return None

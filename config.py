@@ -8,8 +8,5 @@ load_dotenv(find_dotenv())
 TOKEN = os.getenv('TOKEN')
 YANDEX_API_KEY = os.getenv('YANDEX_API_KEY')
 
-ALL_COUNTRIES_CODE_JSON_PATH = os.path.realpath('../database/all_countries_code.json')
+ALL_COUNTRIES_CODE_JSON_PATH = os.path.realpath('../database/create_database/all_countries_code.json')
 DB_PATH = os.path.abspath('database/RusCode.db')
-
-TRANSPORT_VALUES = {'plane': 'самолет', 'train': 'поезд', 'suburban': 'электричка', 'bus': 'автобус',
-                    'water': 'водный транспорт', 'helicopter': 'вертолет'}

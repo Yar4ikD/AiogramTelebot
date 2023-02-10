@@ -1,66 +1,85 @@
-import asyncio
-import json
-import requests
-from config import YANDEX_API_KEY, TRANSPORT_VALUES
-from typing import Dict
+"""
+    Модуль для работы с GET-запросами.
+    Запрос к API - Список ближайших станций
+"""
+from api.base_get_requests import get_request
+from config import YANDEX_API_KEY
+from typing import Dict, Optional
+from loguru import logger
+
+TRANSPORT_VALUES = {'plane': 'самолет', 'train': 'поезд', 'suburban': 'электричка', 'bus': 'автобус',
+                    'water': 'водный транспорт', 'helicopter': 'вертолет'}
 
 
-async def get_nearest_stations(lat: float, lng: float, station_type: str, distance: int):
+async def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
+    """
+    Функция создает параметры для GET запроса, API Список ближайших станций(словарь), из полученных аргументов.
+    Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
+    params(словарь) и url. Переменная url - это адрес GET-запроса к API Яндекс Расписаний.
+
+    Если результат функции get_request - None, возвращает None
+
+    Если результат функции get_request - not None, возвращает результат работы функции forming_response,
+    с передачей ей в качестве аргумента результат функции get_request.
+    Args:
+        distance: Передает радиус поиска
+        station_type: Передает тип станции
+        lng: Передает координаты долготы
+        lat: Передает координаты широты
+
+    Returns: forming_response or None
+    """
+    url = 'https://api.rasp.yandex.net/v3.0/nearest_stations/'
+    params = dict(
+        apikey=YANDEX_API_KEY,
+        lat=lat,
+        lng=lng,
+        station_types=station_type,
+        distance=distance,
+        limit=30
+    )
+
+    result = await get_request(url=url, params=params)
+
+    if result:
+        return forming_response(data=result)
+    return None
+
+
+def forming_response(data: Dict) -> Optional[str]:
+    """
+    Функция извлекает и структурирует информацию. Принимает аргумент - словарь.
+    В словаре данные полученные из GET запроса к API Яндекс Расписаний, раздел - Список ближайших станций.
+    Возвращает строку структурированных данных, или None если отсутствуют ключи в словаре.
+
+    Args:
+        data: Передает данные, полученные из GET запроса.
+
+    Returns: result
+    Raises:
+        Exception: При ошибке работе цикла
+
+    """
+    result = None
 
     try:
-        request = requests.get(f'https://api.rasp.yandex.net/v3.0/nearest_stations/?apikey={YANDEX_API_KEY}'
-                               f'&format=json'
-                               f'&lat={lat}'
-                               f'&lng={lng}'
-                               f'&station_types={station_type}'
-                               f'&distance={distance}'
-                               f'&lang=ru_RU'
-                               f'&limit=50'
-                               )
-
-        if request.status_code != 200:
-            raise requests.RequestException(f'Статус код > {request.status_code}')
-
-    except requests.RequestException as err:
-        print(f'Ошибка ответа сервера!\n{err}')
-        return 'Упс... что то пошло не так, при запросе к серверу.'
-
-    else:
-        data = json.loads(request.text)
-        return await forming_response(data)
-
-
-async def forming_response(data: Dict, limit: int = 30) -> str | None:
-
-    count = 0
-    try:
-        if data.get('stations', None):
+        if data.get('stations'):
             result = '<b>По вашему запросу было найдено:</b>\n'
 
             for value in data.get('stations'):
-                if count >= limit:
-                    break
-                station_type_name = '<b>Тип и название станции:</b>\n{type} - {name}'.format(
-                    type=value.get('station_type_name'), name=value.get('title'))
+                if value.get('station_type_name'):
+                    result += '\n<b>Тип и название станции:</b>\n{type} '.format(type=value.get('station_type_name'))
+                if value.get('title'):
+                    result += '- {name}\n'.format(name=value.get('title'))
+                if value.get('transport_type'):
+                    result += '<b>Тип транспорта:</b> {type}\n'.format(
+                        type=TRANSPORT_VALUES.get(value.get('transport_type'))
+                    )
+                if value.get('distance'):
+                    result += '<b>Расстояние от вас:</b> {km}км.\n'.format(km=int(value.get('distance')))
 
-                transport_type = '<b>Тип транспорта:</b> {type}'.format(
-                    type=TRANSPORT_VALUES.get(value.get('transport_type'), '-'))
-
-                distance = '<b>Расстояние от вас:</b> {km}км.'.format(km=int(value.get('distance')))
-
-                # touch_url = '<b>Url Яндекс Расписание рейсов:</b>\n{url}'.format(
-                #     url=value.get('type_choices').get('tablo').get('touch_url'))
-
-                result += '\n'.join((station_type_name, transport_type, distance, '\n'))
-                count += 1
-            return result
-
-        return None
+        return result
 
     except Exception as err:
-        print(f'Ошибка!\n{err}')
-        return 'Упс... что то пошло не так, при запросе к серверу.'
-
-# if __name__ == '__main__':
-#     asyncio.run(get_nearest_stations())
-
+        logger.exception(err)
+        return None

@@ -1,19 +1,19 @@
-from python_basic_diploma.config import YANDEX_API_KEY
+"""
+    Модуль используется один раз.
+    Он запишет файл, который будет использоваться в сценарии для написания БД.
+    Его можно запустить как самостоятельный сценарий, строки функция main() и условия if.
+"""
 import requests
 import json
 import os
-
-""" 
-Модуль используется один раз.
-Он запишет файл, который будет использоваться в сценарии для написания БД.
-Его можно запустить как самостоятельный сценарий, строки функция main() и условия if.
-"""
+from python_basic_diploma.config import YANDEX_API_KEY
+from loguru import logger
 
 
 def get_code_create_file_json(path: str, api: str = YANDEX_API_KEY) -> None:
     """
-    Функция делает АPI-запрос(GET) Список всех доступных станций - на сервис Яндекс Расписаний.
-    Ответ содержит полный список станций, информацию о которых предоставляют Яндекс Расписания.
+    Функция делает АPI-запрос(GET) на сервис Яндекс Расписаний, раздел Список всех доступных станций.
+    Ответ содержит полный список станций, информацию о которых предоставляет Яндекс Расписания.
 
     Список структурирован географически:
         ответ содержит список стран со вложенными списками регионов и населенных пунктов,
@@ -33,17 +33,23 @@ def get_code_create_file_json(path: str, api: str = YANDEX_API_KEY) -> None:
 
         if not os.path.basename(path).endswith('.json'):
             raise TypeError(f'Файл {path} должен иметь расширение - .json')
+        params = {
+            'apikey': api,
+            'lang': 'ru_Ru',
+            'format': 'json'
+        }
+        url = 'https://api.rasp.yandex.net/v3.0/stations_list/'
 
-        req = requests.get(f'https://api.rasp.yandex.net/v3.0/stations_list/?apikey={api}&lang=ru_Ru&format=json')
+        req = requests.get(url=url, params=params)
 
         if req.status_code != 200:
-            raise Exception(f'Статус код запроса - {req.status_code}')
+            raise Exception(f'Статус код ответа - {req.status_code}')
 
     except TypeError as err:
-        print('Ошибка!', err, sep='\n')
+        logger.exception(err)
 
     except Exception as err:
-        print('Ошибка запроса к серверу Яндекс!', err, sep='\n')
+        logger.exception(err)
 
     else:
         data = json.loads(req.text)
@@ -52,9 +58,7 @@ def get_code_create_file_json(path: str, api: str = YANDEX_API_KEY) -> None:
 
 
 # def main():
-#
 #     get_code_create_file_json(YANDEX_API_KEY, 'file_test.json')
-#
 #
 # if __name__ == '__main__':
 #     main()
