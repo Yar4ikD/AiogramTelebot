@@ -1,4 +1,4 @@
-from ..CRUD_db import YandexDB
+from ..codes_db import YandexDB
 from typing import Dict
 
 columns: str = ''

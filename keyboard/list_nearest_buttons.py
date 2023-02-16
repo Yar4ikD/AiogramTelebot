@@ -6,13 +6,12 @@
 
 import emoji
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from aiogram import types
 from .base import UniversalButtons
 
 
 class Buttons(UniversalButtons):
 
-    buttons_distance = ('10', '30', '50', '70', '90', '100')
+    buttons_distance = ('5', '10', '20', '30', '40', '50')
 
     but_stations_type = {
         'Автовокзал': 'bus_station',
@@ -22,7 +21,7 @@ class Buttons(UniversalButtons):
     }
 
     @classmethod
-    def location(cls) -> types.ReplyKeyboardMarkup:
+    def location(cls) -> ReplyKeyboardMarkup:
         """
         Метод класса создает кнопки и клавиатуру ТГ-бота.
         Кнопка для передачи пользователем соей геолокации.
@@ -32,11 +31,11 @@ class Buttons(UniversalButtons):
         """
         but = KeyboardButton(text=f'Поделиться геолокацией {emoji.emojize(":globe_showing_Asia-Australia:")}',
                              request_location=True)
-        buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(but).add(cls.but_out_k)
+        buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(but).add(cls.but_out)
         return buttons
 
     @classmethod
-    def stations_type(cls) -> types.ReplyKeyboardMarkup:
+    def stations_type(cls) -> ReplyKeyboardMarkup:
         """
         Метод класса создает кнопки и клавиатуру ТГ-бота.
         Кнопки для передачи пользователем типа станции.
@@ -46,7 +45,7 @@ class Buttons(UniversalButtons):
         """
         but = (KeyboardButton(text=text) for text in cls.but_stations_type)
         buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*but)
-        buttons.add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod
@@ -60,7 +59,7 @@ class Buttons(UniversalButtons):
         """
         but = (KeyboardButton(text=text) for text in cls.buttons_distance)
         buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(*but)
-        buttons.add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod
@@ -73,7 +72,7 @@ class Buttons(UniversalButtons):
 
         """
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod
@@ -87,7 +86,7 @@ class Buttons(UniversalButtons):
 
         """
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod

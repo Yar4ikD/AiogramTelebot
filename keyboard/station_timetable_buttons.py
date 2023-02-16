@@ -37,7 +37,7 @@ class Buttons(UniversalButtons):
         Returns: buttons
         """
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod
@@ -47,7 +47,7 @@ class Buttons(UniversalButtons):
         Returns: button
         """
         button = ReplyKeyboardMarkup(resize_keyboard=True)
-        button.add(cls.but_list_stations).add(cls.but_step_back).add(cls.but_out_k)
+        button.add(cls.but_list_stations).add(cls.but_step_back).add(cls.but_out)
         return button
 
     @classmethod
@@ -64,7 +64,7 @@ class Buttons(UniversalButtons):
     @classmethod
     def output(cls) -> types.ReplyKeyboardMarkup:
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_step_back).add(cls.but_out)
 
         return buttons
 

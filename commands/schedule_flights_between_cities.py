@@ -5,11 +5,15 @@
 import emoji
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.utils.callback_data import CallbackData
 from aiogram.types import ReplyKeyboardRemove
 from aiogram_calendar import dialog_cal_callback
+
+from commands.base_command import base_stop_working
 from database.select_data_for_command.for_schedule_flights_between_cities import Select
+from database.user_request_history.work_with_db import History
 from keyboard.schedule_between_cities_buttons import Buttons
 from api.get_schedule_flights_between_cities import request
 from loguru import logger
@@ -30,8 +34,8 @@ class Command(StatesGroup):
     __finish = State()
 
     info_start = f'Для получения расписаний рейсов между городами, вам нужно будет поэтапно указать:\n' \
-               f'\n1. Тип транспорта\n2. Регион и город отправления\n3. Регион и город прибытия\n4. Дату.\n' \
-               f'\nСейчас, укажите - Тип транспорта{emoji.emojize(":backhand_index_pointing_down:")}'
+                 f'\n1. Тип транспорта\n2. Регион и город отправления\n3. Регион и город прибытия\n4. Дату.\n' \
+                 f'\nСейчас, укажите - Тип транспорта{emoji.emojize(":backhand_index_pointing_down:")}'
     info_from_city = f'Укажите город отправления {emoji.emojize(":backhand_index_pointing_down:")}'
     info_from_region = f'Укажите регион отправления {emoji.emojize(":backhand_index_pointing_down:")}'
     info_to_city = f'Укажите город прибытия {emoji.emojize(":backhand_index_pointing_down:")}'
@@ -40,7 +44,8 @@ class Command(StatesGroup):
     info_get_date = f'Укажите дату {emoji.emojize(":calendar:")} на которую необходимо получить список рейсов'
     info_not_result = 'К сожалению, по вашему запросу нет информации!'
 
-    msg_error_region = 'Я не нашел в базе такой области.\nУкажите название еще раз!'
+    msg_error_region = f'{emoji.emojize(":person_shrugging:")} Я не нашел в базе такой области.' \
+                       f'\nУкажите название еще раз!'
     msg_error_city = 'Я не нашел в базе такого города.\nЭто может быть из-за 2х причин:' \
                      '\n1.Неверно указно название города.\n2.В городе нет <b>типа транспорта</b>, ' \
                      'который вы указали ранее.\nУкажите название еще раз или измените тип транспорта!'
@@ -63,6 +68,7 @@ class Command(StatesGroup):
         Returns: None
 
         """
+        logger.info(f'User id: {message.from_user.id} | command: {message.text}')
         await cls.__transport_type.set()
         await message.answer(text=cls.info_start, reply_markup=Buttons.transport())
 
@@ -70,7 +76,7 @@ class Command(StatesGroup):
     @logger.catch()
     async def _universal(cls, message: types.Message, state: FSMContext, data_key: str = None, reg_code: str = None,
                          msg_cont: str = None, msg_step_back: str = None,  msg_error: str = None,
-                         markup_back=Buttons.tru_continue(), markup=ReplyKeyboardRemove()) -> None:
+                         markup_back=Buttons.back(), markup=ReplyKeyboardRemove()) -> None:
         """
         Метод класса для обработки сообщений от пользователя.
         Является универсальным обработчиком для 4х состояний бота:
@@ -111,8 +117,8 @@ class Command(StatesGroup):
                 info = f'Вот что я нашел:\n<b>{response[1]}\n</b>Если все правильно, нажмите ' \
                        f'<b>{Buttons.but_continue.text}</b>\nВ противном случае укажите название заново!'
 
-                await message.reply(text=info, reply_markup=Buttons.tru_continue())
-
+                logger.info(f'User data: {response[1]}')
+                await message.reply(text=info, reply_markup=Buttons.true_continue())
                 async with state.proxy() as data:
                     data[data_key] = response[0]
 
@@ -132,6 +138,7 @@ class Command(StatesGroup):
 
         """
         if message.text in Buttons.transport_type:
+            logger.info(f'Enter transport type > {message.text}')
 
             async with state.proxy() as data:
                 data['transport_type'] = cls.transport_type_dict.get(message.text)
@@ -155,6 +162,8 @@ class Command(StatesGroup):
         Returns: None
 
         """
+        logger.info(f'Enter region departure > {message.text}')
+
         data_key = cls.data_keys[0]
         await cls._universal(message=message, state=state, data_key=data_key, msg_cont=cls.info_from_city,
                              msg_step_back=cls.info_start, msg_error=cls.msg_error_region,
@@ -174,7 +183,6 @@ class Command(StatesGroup):
         Returns: None
 
         """
-
         data_key = cls.data_keys[1]
         async with state.proxy() as data:
             reg_code = data.get(cls.data_keys[0])
@@ -197,7 +205,6 @@ class Command(StatesGroup):
         Returns: None
 
         """
-
         data_key = cls.data_keys[2]
         await cls._universal(message=message, state=state, data_key=data_key, msg_cont=cls.info_to_city,
                              msg_step_back=cls.info_from_city, msg_error=cls.msg_error_region)
@@ -242,7 +249,9 @@ class Command(StatesGroup):
 
             if selected:
                 await callback_query.message.answer(f'Указанная вами дата: <b>{date.strftime("%Y-%m-%d")}</b>',
-                                                    reply_markup=Buttons.tru_continue())
+                                                    reply_markup=Buttons.true_continue())
+
+                logger.info(f'Enter date > {date.strftime("%Y-%m-%d")}')
                 async with state.proxy() as data:
                     data['date'] = date.strftime("%Y-%m-%d")
                 await cls.next()
@@ -266,26 +275,34 @@ class Command(StatesGroup):
             await cls.previous()
             await message.answer(text=cls.info_get_date, reply_markup=await Buttons.calendar().start_calendar())
 
+        elif message.text == Buttons.but_command_again.text:
+            await cls.first()
+            await message.reply(text=cls.info_start, reply_markup=Buttons.transport())
+
         elif message.text == Buttons.but_continue.text:
 
             async with state.proxy() as data:
-                from_city = data.get(cls.data_keys[1])
-                to_city = data.get(cls.data_keys[3])
-                transport = data.get('transport_type')
-                date = data.get('date')
+                from_city, to_city = data.get(cls.data_keys[1]), data.get(cls.data_keys[3])
+                transport, date = data.get('transport_type'), data.get('date')
+                query_data = f'{from_city}, {to_city}, {transport}, {date}'
 
             result = await request(from_city=from_city, to_city=to_city, transport_type=transport, date=date)
 
             if result and len(result) > 1:
+                History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)
+
                 if len(result) > 4096:
                     for count in range(0, len(result), 4096):
-                        await message.answer(text=result[count: count + 4095], reply_markup=Buttons.menu_or_again())
+                        await message.answer(text=result[count: count + 4095], reply_markup=Buttons.exit_or_again())
                 else:
-                    await message.answer(text=result, reply_markup=Buttons.menu_or_again())
-            else:
-                await message.answer(cls.info_not_result, reply_markup=Buttons.menu_or_again())
+                    await message.answer(text=result, reply_markup=Buttons.exit_or_again())
+                logger.success('Result command')
 
-            await state.finish()
+            else:
+                logger.error(f'Result {result}')
+                await message.answer(cls.info_not_result, reply_markup=Buttons.exit_or_again())
+
+            # await state.finish()
 
         else:
             await message.reply(text=cls.error_msg_no_sense)
@@ -301,6 +318,7 @@ class Command(StatesGroup):
 
         """
         dp.register_message_handler(callback=cls.start_work, text=Buttons.but_command_1.text, state=None)
+        dp.register_message_handler(base_stop_working, Text(Buttons.but_out.text), state='*')
         dp.register_message_handler(callback=cls.get_transport_type, state=cls.__transport_type)
         dp.register_message_handler(callback=cls.get_from_region, state=cls.__form_region)
         dp.register_message_handler(callback=cls.get_from_city, state=cls.__from_city)

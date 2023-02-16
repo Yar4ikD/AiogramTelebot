@@ -8,10 +8,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from keyboard.list_nearest_buttons import Buttons
 from api.get_list_nearest_stations import request
+from database.user_request_history.work_with_db import History
 from loguru import logger
 
 
-class Station(StatesGroup):
+class Command(StatesGroup):
     """
         Подкласс наследует от базового класса StatesGroup.
         В классе прописана работа команды ТГ-бота: Список ближайших станций.
@@ -22,7 +23,7 @@ class Station(StatesGroup):
     __distance = State()
     __end = State()
 
-    info_start = f'Для получения списка ближайших станций вам нужно указать геолокацию.'
+    info_start = f'Для получения списка ближайших станций укажите геолокацию.'
     info_select_type_stat = 'Выберите тип станции:'
     info_radius = 'Укажите радиус поиска в км.'
     conf_radius = f'Если все правильно, нажмите <b>{Buttons.but_continue.text}</b>' \
@@ -32,7 +33,7 @@ class Station(StatesGroup):
     error_type_station = '<b>Выберите один вариант из списка.</b>\n<b>Не нужно</b> писать сообщение!' \
                          '\nОтправляю список повторно:'
     error_radius = '<b>Выберите один вариант из списка.</b>\nИли укажи число!\nОтправляю список повторно.'
-    error_result = 'В данном радиусе поиска нет станций, по вашему запросу.\nПопробуйте увеличить радиус.'
+    error_result = 'В данном радиусе поиска нет станций, по вашему запросу.\nМакс радиус поиска 50 км.'
 
     @classmethod
     async def start(cls, message: types.Message, state: FSMContext) -> None:
@@ -47,7 +48,7 @@ class Station(StatesGroup):
         Returns: None
 
         """
-        logger.info(f'User id > {message.from_user.id} start command {message.text}')
+        logger.info(f'User id: {message.from_user.id} | command: {message.text}')
         await cls.__location.set()
         await message.answer(text=cls.info_start, reply_markup=Buttons.location())
 
@@ -84,12 +85,11 @@ class Station(StatesGroup):
         Returns: None
 
         """
-
         if message.text in Buttons.but_stations_type:
             async with state.proxy() as data:
                 data['station'] = Buttons.but_stations_type.get(message.text)
 
-            logger.info(f'Enter type station {message.text}')
+            logger.info(f'Enter type station: {message.text}')
             await cls.next()
             await message.answer(text=cls.info_radius, reply_markup=Buttons.distance())
 
@@ -116,7 +116,7 @@ class Station(StatesGroup):
             async with state.proxy() as data:
                 data['radius'] = int(message.text)
 
-            logger.info(f'Enter radius {message.text}')
+            logger.info(f'Enter radius: {message.text}')
             await cls.next()
             await message.reply(text=cls.conf_radius, reply_markup=Buttons.tru_continue())
 
@@ -147,16 +147,18 @@ class Station(StatesGroup):
 
         elif message.text == Buttons.but_continue.text:
             async with state.proxy() as data:
-                lat = data.get('lat')
-                lng = data.get('lng')
-                station_type = data.get('station')
-                distance = data.get('radius')
+                lat, lng = data.get('lat'), data.get('lng')
+                station_type, distance = data.get('station'), data.get('radius')
+                query_data = f'{lat}, {lng}, {station_type}, {distance}' #', '.join((str(lat), str(lng), station_type, str(distance)))
+
                 result = await request(lat=lat, lng=lng, station_type=station_type, distance=distance)
 
             if result:
-                logger.success('Finish work command')
+                History.add_command(command='Список ближайших станций', query=query_data, response=result)
+
                 await message.answer(text=result, reply_markup=Buttons.exit())
                 await state.finish()
+                logger.success('Result command')
 
             else:
                 logger.error(f'Result {result}')

@@ -2,6 +2,7 @@
     Модуль для работы с GET-запросами.
     Запрос к API - Список ближайших станций
 """
+import emoji
 from api.base_get_requests import get_request
 from config import YANDEX_API_KEY
 from typing import Dict, Optional
@@ -61,23 +62,22 @@ def forming_response(data: Dict) -> Optional[str]:
 
     """
     result = None
-
+    logger.success('get_list_nearest_station > func forming_response')
     try:
         if data.get('stations'):
-            result = '<b>По вашему запросу было найдено:</b>\n'
+            result = f'Найденная информация{emoji.emojize(":information:")}'
 
             for value in data.get('stations'):
                 if value.get('station_type_name'):
-                    result += '\n<b>Тип и название станции:</b>\n{type} '.format(type=value.get('station_type_name'))
+                    result += '\nТип и название станции:\n{type} '.format(type=value.get('station_type_name'))
                 if value.get('title'):
                     result += '- {name}\n'.format(name=value.get('title'))
                 if value.get('transport_type'):
-                    result += '<b>Тип транспорта:</b> {type}\n'.format(
+                    result += 'Тип транспорта: {type}\n'.format(
                         type=TRANSPORT_VALUES.get(value.get('transport_type'))
                     )
                 if value.get('distance'):
-                    result += '<b>Расстояние от вас:</b> {km}км.\n'.format(km=int(value.get('distance')))
-
+                    result += 'Расстояние от вас: {km} км.\n'.format(km=int(value.get('distance')))
         return result
 
     except Exception as err:

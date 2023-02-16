@@ -28,6 +28,7 @@ async def request(station_code: str, date=datetime.datetime.today(), transport: 
         event: Передает направление транспорта со станции
 
     Returns: forming_response or None
+
     """
     params = {
         'apikey': YANDEX_API_KEY,
@@ -37,7 +38,6 @@ async def request(station_code: str, date=datetime.datetime.today(), transport: 
         'transport_types': transport,
         'event': event,
         'direction': 'all',
-        # 'result_timezone': 'Europe/Moscow'
     }
     url = 'https://api.rasp.yandex.net/v3.0/schedule/'
     result = await get_request(url=url, params=params)
@@ -61,41 +61,42 @@ def forming_response(data: Dict) -> Optional[str]:
         Exception: При ошибке работе цикла
     """
     limit = 20
+    result = None
+
     try:
-        result = ''
-        if data.get('station').get('title'):
-            result += '<b>Станция:</b>\n{data}\n'.format(data=data.get('station').get('title'))
-        if data.get('station').get('station_type_name'):
-            result += '<b>Тип станции:</b> {data}\n'.format(data=data.get('station').get('station_type_name'))
+        if data.get('station', {}).get('title'):
+            result = 'Станция: {data}\n'.format(data=data.get('station').get('title'))
+        if data.get('station', {}).get('station_type_name'):
+            result += 'Тип станции: {data}\n'.format(data=data.get('station').get('station_type_name'))
         if data.get('date'):
-            result += '<b>Дата:</b> {date}\n'.format(date=data.get('date'))
+            result += 'Дата: {date}\n'.format(date=data.get('date'))
 
         for count, value in enumerate(data.get('schedule')):
             if count >= limit:
                 break
 
-            if value.get('thread').get('title'):
+            if value.get('thread', {}).get('title'):
                 result += '\nНазвание нитки:\n{data}\n'.format(data=value.get('thread').get('title'))
-            if value.get('thread').get('number'):
+            if value.get('thread', {}).get('number'):
                 result += 'Номер рейса: {data}\n'.format(data=value.get('thread').get('number'))
 
             if value.get('terminal'):
                 result += 'Терминал аэропорта: {data}\n'.format(data=value.get('terminal'))
             if value.get('platform'):
-                result += 'Платформа отправления рейса:\n{data}\n'.format(data=value.get('platform'))
+                result += 'Платформа отправления:\n{data}\n'.format(data=value.get('platform'))
 
             if value.get('departure'):
                 result += 'Время отправления:\n{data}\n'.format(data=value.get('departure'))
             if value.get('arrival'):
                 result += 'Время прибытия:\n{data}\n'.format(data=value.get('arrival'))
             if value.get('days'):
-                result += 'Дни курсирования нитки: {data}\n'.format(data=value.get('days'))
+                result += 'Дни курсирования: {data}\n'.format(data=value.get('days'))
 
-            if value.get('thread').get('carrier').get('title'):
-                result += 'Перевозчик:\n{data}\n'.format(data=value.get('thread').get('carrier').get('title'))
-            if value.get('thread').get('vehicle'):
-                result += 'Транспортное средство:\n{data}\n'.format(data=value.get('thread').get('vehicle'))
-            if value.get('thread').get('transport_subtype').get('title'):
+            if value.get('thread', {}).get('carrier', {}).get('title'):
+                result += 'Перевозчик: {data}\n'.format(data=value.get('thread').get('carrier').get('title'))
+            if value.get('thread', {}).get('vehicle'):
+                result += 'Транспортное средство: {data}\n'.format(data=value.get('thread').get('vehicle'))
+            if value.get('thread', {}).get('transport_subtype', {}).get('title'):
                 result += '{data}\n'.format(data=value.get('thread').get('transport_subtype').get('title'))
 
         return result

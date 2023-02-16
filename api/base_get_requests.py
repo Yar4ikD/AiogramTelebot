@@ -20,13 +20,15 @@ async def get_request(url: str, params: Dict) -> Optional[Dict]:
     Returns: json.loads(request.txt) or None
     Raises:
         RequestException: Если статус - код ответа, не равен 200.
+
     """
     try:
         request = requests.get(url=url, params=params)
 
         if request.status_code != 200:
-            raise requests.RequestException(f'Статус код ответа > {request.status_code}')
+            raise requests.RequestException(f'Статус ответа > {request.text}')
 
+        logger.info('Request work')
         return json.loads(request.text)
 
     except requests.RequestException as err:

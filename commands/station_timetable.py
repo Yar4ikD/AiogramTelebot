@@ -11,6 +11,7 @@ from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
 from aiogram_calendar import dialog_cal_callback, DialogCalendar
 from database.select_data_for_command.station_timetable import Select
+from database.user_request_history.work_with_db import History
 from keyboard.station_timetable_buttons import Buttons
 from api.get_schedule_station import request
 from loguru import logger
@@ -48,7 +49,7 @@ class Command(StatesGroup):
     msg_error_list_st = 'К сожалению в этом населенном пункте, нет станций!'
     msg_error_station = 'Я не нашел в базе такой станции.\nУкажите название еще раз...'
     error_msg_no_sense = f'Что это значить, я не понимаю Вас{emoji.emojize(":person_shrugging:")}' \
-                         f'\nВыберите одну из команд.'
+                         f'\nВыберите одну из команд {emoji.emojize(":backhand_index_pointing_down:")}'
 
     data_keys = ('region', 'city', 'station_code', 'transport', 'event', 'date')
 
@@ -66,7 +67,7 @@ class Command(StatesGroup):
         Returns: None
 
         """
-        logger.info(f'User id > {message.from_user.id} start command {message.text}')
+        logger.info(f'User id: {message.from_user.id} | command: {message.text}')
         await cls.__event_and_transport.set()  # запускаем FSM состояния бота
         await message.answer(text=cls.info_start, reply_markup=Buttons.event_transport())
 
@@ -137,6 +138,7 @@ class Command(StatesGroup):
                 info = f'Вот что я нашел:\n<b>{response[1]}\n</b>Если все правильно, нажмите ' \
                        f'<b>{Buttons.but_continue.text}</b>\nВ противном случае укажете данные заново!'
 
+                logger.info(f'User data: {response[1]}')
                 async with state.proxy() as data:
                     data[data_key] = response[0]  # записываем код из БД
 
@@ -158,6 +160,7 @@ class Command(StatesGroup):
         Returns: None
         """
         if message.text in Buttons.event_and_transport:
+            logger.info(f'Enter Type transport/event: {message.text}')
             value = Buttons.event_and_transport.get(message.text)
 
             async with state.proxy() as data:
@@ -179,6 +182,7 @@ class Command(StatesGroup):
             state: Передает FSM состояние бота, __region.
 
         Returns: None
+
         """
         key = cls.data_keys[0]
         await cls._universal(message=message, state=state, data_key=key, msg_cont=cls.info_settlement,
@@ -197,8 +201,8 @@ class Command(StatesGroup):
             state: Передает FSM состояние бота, __settlement.
 
         Returns: None
-        """
 
+        """
         key = cls.data_keys[1]
         async with state.proxy() as data:
             reg_code = data.get(cls.data_keys[0])
@@ -219,7 +223,8 @@ class Command(StatesGroup):
             message: Передает название станции
             state: Передает FSM состояние бота, __station_code
 
-        Returns:
+        Returns: None
+
         """
         key = cls.data_keys[2]
         async with state.proxy() as data:
@@ -247,12 +252,13 @@ class Command(StatesGroup):
         Returns: None
 
         """
-
         if isinstance(callback_query, types.CallbackQuery):
             selected, date = await Buttons.calendar().process_selection(callback_query, callback_data)
             if selected:
                 await callback_query.message.answer(f'Указанная вами дата: <b>{date.strftime("%Y-%m-%d")}</b>',
                                                     reply_markup=Buttons.tru_continue())
+
+                logger.info(f'Enter date > {date.strftime("%Y-%m-%d")}')
                 async with state.proxy() as data:
                     data['date'] = date.strftime("%Y-%m-%d")
                 await cls.next()
@@ -280,18 +286,23 @@ class Command(StatesGroup):
             async with state.proxy() as data:
                 code, date = data.get(cls.data_keys[2]), data.get('date')
                 transport, event = data.get('transport_type'), data.get('event')
+                query_data = f'{code}, {date}, {transport}, {event}'
 
             result = await request(station_code=code, date=date, transport=transport, event=event)
 
             if result and len(result) > 1:
+                History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)
+
                 if len(result) > 4096:
                     for count in range(0, len(result), 4096):
                         await message.answer(text=result[count: count + 4095], reply_markup=Buttons.button_result())
                 else:
                     await message.answer(text=result, reply_markup=Buttons.button_result())
+                logger.success('Result command')
             else:
+                logger.error(f'Result {result}')
                 not_result = 'По Вашему запросу нет информации.'
-                await message.answer(not_result, reply_markup=Buttons.button_result())
+                await message.answer(text=not_result, reply_markup=Buttons.button_result())
 
             await state.finish()
 
@@ -309,7 +320,7 @@ class Command(StatesGroup):
 
         """
         dp.register_message_handler(callback=cls.start, text=Buttons.but_command_2.text, state=None)
-        dp.register_message_handler(base_stop_working, Text(Buttons.but_out_k.text), state='*')
+        dp.register_message_handler(base_stop_working, Text(Buttons.but_out.text), state='*')
         dp.register_message_handler(callback=cls.get_event_and_type_transport, state=cls.__event_and_transport)
         dp.register_message_handler(callback=cls.region, state=cls.__region)
         dp.register_message_handler(callback=cls.settlement, state=cls.__settlement)

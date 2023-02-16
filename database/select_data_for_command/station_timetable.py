@@ -5,7 +5,7 @@
 """
 import aiosqlite
 from loguru import logger
-from ..CRUD_db import YandexDB
+from ..codes_db import YandexDB
 from typing import Optional, Tuple
 
 
@@ -40,7 +40,7 @@ class Select(YandexDB):
             return result
 
         except Exception as err:
-            logger.error(err)
+            logger.exception(err)
             return None
 
     @classmethod
@@ -67,7 +67,7 @@ class Select(YandexDB):
             return row
 
         except aiosqlite.Error as err:
-            logger.error(err)
+            logger.exception(err)
             return None
 
     @classmethod
@@ -93,7 +93,7 @@ class Select(YandexDB):
             rows = await cursor.fetchmany(size=30)
 
         except aiosqlite.Error as err:
-            logger.error(err)
+            logger.exception(err)
             return None
 
         else:
@@ -124,5 +124,5 @@ class Select(YandexDB):
             return row
 
         except aiosqlite.Error as err:
-            logger.error(err)
+            logger.exception(err)
             return None

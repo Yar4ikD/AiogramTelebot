@@ -6,7 +6,7 @@
 
 import aiosqlite
 from loguru import logger
-from ..CRUD_db import YandexDB
+from ..codes_db import YandexDB
 from typing import Tuple, Optional
 
 
@@ -47,6 +47,7 @@ class Select(YandexDB):
         Returns: str or None
         Raises:
             aiosqlite.Error: При ошибки запроса к БД.
+
         """
         try:
             value = (region_code, f'%{user_msg}%', f'%{user_msg}%')
@@ -60,5 +61,5 @@ class Select(YandexDB):
             return row
 
         except aiosqlite.Error as err:
-            logger.error(err)
+            logger.exception(err)
             return None

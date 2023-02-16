@@ -29,6 +29,7 @@ async def request(from_city: str, to_city: str, transport_type: str, date: str) 
         date: Передает дату, на которую необходимо получить список рейсов. YYYY-MM-DD
 
     Returns: forming_response or None
+
     """
     params = {
         'apikey': YANDEX_API_KEY,
@@ -68,50 +69,47 @@ def forming_response(data: Dict) -> Optional[str]:
 
     try:
         if data.get('segments'):
-            result = f'<b>Найденная информация</b>{emoji.emojize(":information:")}'
+            result = f'Найденная информация{emoji.emojize(":information:")}'
             for value in data.get('segments'):
-
-                if value.get('from').get('title'):
-                    result += '\nПункта отправления:\n{}\n'.format(value.get('from').get('title'))
+                result += '\nОтправления:\n'
+                if value.get('from', {}).get('title'):
+                    result += 'Пункт: {}\n'.format(value.get('from').get('title'))
                 if value.get('departure_platform'):
-                    result += 'Номер платформы станции отправления: {}\n'.format(value.get('departure_platform'))
+                    result += 'Номер платформы: {}\n'.format(value.get('departure_platform'))
                 if value.get('departure_terminal'):
-                    result += 'Терминал станции отправления: {}\n'.format(value.get('departure_terminal'))
+                    result += 'Терминал: {}\n'.format(value.get('departure_terminal'))
                 if value.get('departure'):
-                    result += 'Время отправления:\n{}\n'.format(value.get('departure'))
-
-                if value.get('to').get('title'):
-                    result += 'Станция прибытия:\n{}\n'.format(value.get('to').get('title'))
+                    result += 'Время: {}\n'.format(value.get('departure'))
+                result += '\nПрибытия:\n'
+                if value.get('to', {}).get('title'):
+                    result += 'Станция: {}\n'.format(value.get('to').get('title'))
                 if value.get('arrival_platform'):
-                    result += 'Номер платформы станции прибытия:\n{}\n'.format(value.get('arrival_platform'))
+                    result += 'Номер платформы: {}\n'.format(value.get('arrival_platform'))
                 if value.get('arrival_terminal'):
-                    result += 'Терминал станции прибытия: {}\n'.format(value.get('arrival_terminal'))
+                    result += 'Терминал: {}\n'.format(value.get('arrival_terminal'))
                 if value.get('arrival'):
-                    result += 'Время прибытия:\n{}\n'.format(value.get('arrival'))
+                    result += 'Время: {}\n'.format(value.get('arrival'))
 
                 if value.get('has_transfers'):
                     result += 'Наличия пересадок по ходу рейса!\n'
                 if value.get('duration'):
                     result += 'Продолжительность рейса: {}\n'.format(value.get('duration'))
                 if value.get('tickets_info'):
-                    flag = 'Возможно.' if value.get('tickets_info').get('et_marker') else 'Нет'
+                    flag = 'Возможно.' if value.get('tickets_info', {}).get('et_marker') else 'Нет'
                     result += 'Купить электронный билет: {}\n'.format(flag)
 
-                result += '\nИнформация о нитке рейса\n'
-                if value.get('thread').get('title'):
-                    result += 'Название нитки:\n{}\n'.format(value.get('thread').get('title'))
-                if value.get('thread').get('number'):
+                if value.get('thread', {}).get('number'):
                     result += 'Номер рейса: {}\n'.format(value.get('thread').get('number'))
-                if value.get('thread').get('vehicle'):
+                if value.get('thread', {}).get('vehicle'):
                     result += 'Название транспортного средства:\n{}\n'.format(value.get('thread').get('vehicle'))
 
                 result += '\nИнформация о перевозчике.\n'
-                if value.get('thread').get('carrier').get('title'):
+                if value.get('thread', {}).get('carrier', {}).get('title'):
                     result += 'Перевозчик: {}\n'.format(value.get('thread').get('carrier').get('title'))
-                if value.get('thread').get('carrier').get('phone'):
+                if value.get('thread', {}).get('carrier', {}).get('phone'):
                     result += 'Номер телефона:\n{}\n'.format(value.get('thread').get('carrier').get('phone'))
-                if value.get('thread').get('carrier').get('url'):
-                    result += 'Сайт перевозчика:\n{}\n'.format(value.get('thread').get('carrier').get('url'))
+                if value.get('thread', {}).get('carrier', {}).get('url'):
+                    result += 'Сайт:\n{}\n'.format(value.get('thread').get('carrier').get('url'))
                 result += '-' * 10
 
         return result

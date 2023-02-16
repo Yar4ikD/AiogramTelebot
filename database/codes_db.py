@@ -53,9 +53,12 @@ class YandexDB:
 
         :param table: Передает имя таблицы
         """
-        query = f"CREATE TABLE IF NOT EXISTS {table}"
-        self.__cur.execute(query)
-        self.__base.commit()
+        try:
+            query = f"CREATE TABLE IF NOT EXISTS {table}"
+            self.__cur.execute(query)
+            self.__base.commit()
+        except sq.Error as err:
+            logger.exception(err)
 
     def insert_data(self, table: str, data: tuple) -> None:
         """
@@ -116,6 +119,7 @@ class YandexDB:
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()
             return row
+
         except aiosqlite.Error as err:
-            logger.error(err)
+            logger.exception(err)
             return None

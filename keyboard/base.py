@@ -1,7 +1,7 @@
 """В этом модуле созданы базовые кнопки ТГ-бота."""
 
 import emoji
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram import types
 from aiogram_calendar import DialogCalendar
 
@@ -18,20 +18,17 @@ class UniversalButtons:
     but_step_back = KeyboardButton(text=f'{emoji.emojize(":fast_reverse_button:")} Вернуться назад')
     but_command_again = KeyboardButton(text=f'Запусти команду заново {emoji.emojize(":repeat_button:")}')
     but_list_command = KeyboardButton(text=f'Выведи список своих команд {emoji.emojize(":repeat_single_button:")}')
-    but_out_k = KeyboardButton(text=f'Выйти {emoji.emojize(":cross_mark_button:")}')
-
-    # but_back = InlineKeyboardButton(text='Вернуться назад', callback_data='back')
-    # but_out = InlineKeyboardButton(f'Выйти {emoji.emojize(":stop_sign:")}', callback_data='out')
-    # but_again = InlineKeyboardButton(text='Включить поиск еще раз.', callback_data='*')
-    # but_choice = InlineKeyboardButton(text='Пропустить этот шаг. Указать город', callback_data='*')
+    but_out = KeyboardButton(text=f'Выйти {emoji.emojize(":cross_mark_button:")}')
 
     @classmethod
     def list_command(cls) -> types.ReplyKeyboardMarkup:
         """
         Метод класса создает кнопки и клавиатуру ТГ-бота.
-        Применяется при старте бота или команды Помощь
+        Применяется при старте бота или команды Помощь.
+        Кнопки для вызова основных команд ТГ-бота.
 
         Returns: button_start
+
         """
         button_start = ReplyKeyboardMarkup(row_width=1)
         button_start.add(cls.but_command_1).add(cls.but_command_2).add(cls.but_command_3)
@@ -42,6 +39,7 @@ class UniversalButtons:
         """
         Метод класса создает кнопки календаря, виджет календаря.
         Применяется при выборе даты.
+
         Returns: exm_calendar
 
         """
