@@ -12,7 +12,7 @@ TRANSPORT_VALUES = {'plane': 'самолет', 'train': 'поезд', 'suburban'
                     'water': 'водный транспорт', 'helicopter': 'вертолет'}
 
 
-async def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
+def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
     """
     Функция создает параметры для GET запроса, API Список ближайших станций(словарь), из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -40,7 +40,7 @@ async def request(lat: float, lng: float, station_type: str, distance: int) -> O
         limit=30
     )
 
-    result = await get_request(url=url, params=params)
+    result = get_request(url=url, params=params)
 
     if result:
         return forming_response(data=result)
@@ -62,7 +62,7 @@ def forming_response(data: Dict) -> Optional[str]:
 
     """
     result = None
-    logger.success('get_list_nearest_station > func forming_response')
+
     try:
         if data.get('stations'):
             result = f'Найденная информация{emoji.emojize(":information:")}'
@@ -70,14 +70,18 @@ def forming_response(data: Dict) -> Optional[str]:
             for value in data.get('stations'):
                 if value.get('station_type_name'):
                     result += '\nТип и название станции:\n{type} '.format(type=value.get('station_type_name'))
+
                 if value.get('title'):
                     result += '- {name}\n'.format(name=value.get('title'))
+
                 if value.get('transport_type'):
                     result += 'Тип транспорта: {type}\n'.format(
                         type=TRANSPORT_VALUES.get(value.get('transport_type'))
                     )
                 if value.get('distance'):
                     result += 'Расстояние от вас: {km} км.\n'.format(km=int(value.get('distance')))
+
+        logger.success('get_list_nearest_station > func forming_response')
         return result
 
     except Exception as err:

@@ -76,7 +76,7 @@ class Buttons(UniversalButtons):
         return buttons
 
     @classmethod
-    def error_result(cls) -> ReplyKeyboardMarkup:
+    def result(cls) -> ReplyKeyboardMarkup:
         """
         Метод класса создает кнопки и клавиатуру ТГ-бота.
         Кнопки Выход и вернуться назад.
@@ -89,16 +89,16 @@ class Buttons(UniversalButtons):
         buttons.add(cls.but_step_back).add(cls.but_out)
         return buttons
 
-    @classmethod
-    def exit(cls) -> ReplyKeyboardMarkup:
-        """
-        Метод класса создает кнопки и клавиатуру ТГ-бота.
-        Кнопка Вывести список команд.
-        Используется при корректном завершении работы команды.
-
-        Returns: buttons
-
-        """
-        buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(cls.but_list_command)
-
-        return buttons
+    # @classmethod
+    # def exit(cls) -> ReplyKeyboardMarkup:
+    #     """
+    #     Метод класса создает кнопки и клавиатуру ТГ-бота.
+    #     Кнопка Вывести список команд.
+    #     Используется при корректном завершении работы команды.
+    #
+    #     Returns: buttons
+    #
+    #     """
+    #     buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(cls.but_list_command)
+    #
+    #     return buttons

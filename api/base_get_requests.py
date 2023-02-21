@@ -9,7 +9,7 @@ from loguru import logger
 from typing import Dict, Optional
 
 
-async def get_request(url: str, params: Dict) -> Optional[Dict]:
+def get_request(url: str, params: Dict) -> Optional[Dict]:
     """
     Функция для работы с GET-запросами к API Яндекс Расписаний и его разделов.
 
@@ -28,7 +28,7 @@ async def get_request(url: str, params: Dict) -> Optional[Dict]:
         if request.status_code != 200:
             raise requests.RequestException(f'Статус ответа > {request.text}')
 
-        logger.info('Request work')
+        logger.success('GET-запрос')
         return json.loads(request.text)
 
     except requests.RequestException as err:

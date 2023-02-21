@@ -54,6 +54,7 @@ class Select(YandexDB):
         Returns: row or None
         Raises:
             aiosqlite.Error: При ошибки запроса к БД.
+
         """
         try:
             value = (region_code, f'%{user_msg}%', f'%{user_msg}%')
@@ -82,6 +83,7 @@ class Select(YandexDB):
         Returns: str or None
         Raises:
             aiosqlite.Error: При ошибки запроса к БД.
+
         """
         try:
             value = (settlement_code, transport)
@@ -97,6 +99,7 @@ class Select(YandexDB):
             return None
 
         else:
+            logger.success('func | list_station')
             return cls.forming_response(data=rows)  # вызываем метод для обработки ответа БД, возвращает str
 
     @classmethod
@@ -111,9 +114,11 @@ class Select(YandexDB):
         Returns: row or None
         Raises:
             aiosqlite.Error: При ошибки запроса к БД.
+
         """
-        logger.info('work')
+
         try:
+            logger.success('func | yandex_code')
             value = (settlement, f'%{user_msg}%', f'%{user_msg}%', transport_type)
 
             query = f"SELECT {cls.YANDEX_CODE}, {cls.TITLE} FROM {cls.TABLE} WHERE {cls.CODES_SETTLE} LIKE ? " \
@@ -121,6 +126,7 @@ class Select(YandexDB):
 
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()
+
             return row
 
         except aiosqlite.Error as err:

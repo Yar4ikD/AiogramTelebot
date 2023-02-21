@@ -19,7 +19,7 @@ class Buttons(UniversalButtons):
         Returns: buttons
         """
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out_k)
+        buttons.add(cls.but_continue).add(cls.but_step_back).add(cls.but_out)
         return buttons
 
     @classmethod
@@ -40,11 +40,11 @@ class Buttons(UniversalButtons):
         """
         but = (KeyboardButton(text=text) for text in cls.transport_type)
         buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*but)
-        buttons.add(cls.but_out_k)
+        buttons.add(cls.but_out)
         return buttons
 
     @classmethod
     def exit_or_again(cls) -> ReplyKeyboardMarkup:
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_command_again).add(cls.but_out_k)
+        buttons.add(cls.but_command_again).add(cls.but_out)
         return buttons

@@ -71,13 +71,8 @@ async def base_stop_working(callback: types.Message, state: FSMContext) -> None:
 
     await state.finish()
     em_but = emoji.emojize(":OK_hand:")
-
-    # if isinstance(callback, types.CallbackQuery):
-    #     info = f'{callback.message.chat.first_name} вы успешно вышли из раздела {em_but}'
-    #
-    #     await callback.answer(text=info, show_alert=True)
-    # else:
     info = f'{callback.chat.first_name} вы успешно вышли из раздела {em_but}'
+
     await callback.answer(text=info, reply_markup=UniversalButtons.list_command())
 
 

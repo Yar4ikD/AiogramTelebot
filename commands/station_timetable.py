@@ -34,10 +34,10 @@ class Command(StatesGroup):
     __settlement = State()
     __station_code = State()
     __dat = State()
-    __result = State()
+    __result_s = State()
 
     info_start = f'{emoji.emojize(":trolleybus:")} Выберите тип транспорта и направление'
-    info_region = 'Укажите <b>названия области</b>, без добавления: <b>обл, рег</b> Пример:\n' \
+    info_region = 'Укажите <b>названия области</b>, без добавления: <b>обл, рег</b>\nПример:\n' \
                   '<b>Ярославская</b>\n<b>Московская</b>\n<b>Псковская</b>'
     info_settlement = f'Укажите название населенного пункта {emoji.emojize(":backhand_index_pointing_down:")}'
     info_station = f'Укажите название станции {emoji.emojize(":backhand_index_pointing_down:")}'
@@ -108,8 +108,7 @@ class Command(StatesGroup):
 
         elif message.text == Buttons.but_step_back.text:  # возвращаем бота в предыдущее FSM состояния
             await cls.previous()
-            await message.answer(text=msg_step_back, reply_markup=markup_back)
-            await message.delete()
+            await message.reply(text=msg_step_back, reply_markup=markup_back)
 
         elif message.text == Buttons.but_list_stations.text:  # выводит список станций в населенном пункте
             async with state.proxy() as data:
@@ -119,7 +118,7 @@ class Command(StatesGroup):
             if response:
                 await message.answer(text=response)
             else:
-                await message.reply(text=cls.msg_error_list_st)
+                await message.reply(text=cls.msg_error_list_st, reply_markup=markup_back)
 
         else:
             user_msg = message.text.capitalize().strip()  # обработка сообщения от пользователя
@@ -141,9 +140,8 @@ class Command(StatesGroup):
                 logger.info(f'User data: {response[1]}')
                 async with state.proxy() as data:
                     data[data_key] = response[0]  # записываем код из БД
-
                 await message.reply(text=info, reply_markup=Buttons.tru_continue())
-                # await message.delete()
+
             else:
                 await message.reply(text=msg_error, reply_markup=Buttons.output())
 
@@ -165,6 +163,7 @@ class Command(StatesGroup):
 
             async with state.proxy() as data:
                 data['transport'], data['event'] = value
+                print(data)
             await cls.next()
             await message.answer(text=cls.info_region, reply_markup=ReplyKeyboardRemove())
         else:
@@ -235,7 +234,7 @@ class Command(StatesGroup):
                              sett_code=city_code, transport=transport, msg_cont=cls.info_date,
                              msg_step_back=cls.info_settlement,
                              msg_error=cls.msg_error_station,
-                             markup=await Buttons.calendar().start_calendar())  #  await DialogCalendar().start_calendar())
+                             markup=await Buttons.calendar().start_calendar())
 
     @classmethod
     async def get_calendar(cls, callback_query: types.CallbackQuery,
@@ -264,7 +263,6 @@ class Command(StatesGroup):
                 await cls.next()
 
     @classmethod
-    @logger.catch()
     async def result(cls, message: types.Message, state: FSMContext) -> None:
         """
         Метод обработчик, возвращает пользователю информацию запроса.
@@ -276,36 +274,37 @@ class Command(StatesGroup):
             state: Передает FSM состояние бота, __result.
 
         Returns: None
+
         """
         if message.text == Buttons.but_step_back.text:  # возвращаем бота в предыдущее FSM состояния
             await cls.previous()
-            await message.answer(text=cls.info_date, reply_markup=await DialogCalendar().start_calendar())
+            await message.answer(text=cls.info_date, reply_markup=await Buttons.calendar().start_calendar())
 
         elif message.text == Buttons.but_continue.text:  # выводим ответ пользователю на его запрос.
 
             async with state.proxy() as data:
                 code, date = data.get(cls.data_keys[2]), data.get('date')
-                transport, event = data.get('transport_type'), data.get('event')
+                transport, event = data.get('transport'), data.get('event')
                 query_data = f'{code}, {date}, {transport}, {event}'
 
-            result = await request(station_code=code, date=date, transport=transport, event=event)
+            result = request(station_code=code, date=date, transport=transport, event=event)
 
             if result and len(result) > 1:
                 History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)
 
                 if len(result) > 4096:
                     for count in range(0, len(result), 4096):
-                        await message.answer(text=result[count: count + 4095], reply_markup=Buttons.button_result())
+                        await message.answer(text=result[count: count + 4095], reply_markup=Buttons.output())
                 else:
-                    await message.answer(text=result, reply_markup=Buttons.button_result())
+                    await message.answer(text=result, reply_markup=Buttons.output())
                 logger.success('Result command')
+
             else:
                 logger.error(f'Result {result}')
                 not_result = 'По Вашему запросу нет информации.'
-                await message.answer(text=not_result, reply_markup=Buttons.button_result())
+                await message.answer(text=not_result, reply_markup=Buttons.output())
 
-            await state.finish()
-
+            # await state.finish()
         else:
             await message.reply(text=cls.error_msg_no_sense)
 
@@ -326,4 +325,4 @@ class Command(StatesGroup):
         dp.register_message_handler(callback=cls.settlement, state=cls.__settlement)
         dp.register_message_handler(callback=cls.station, state=cls.__station_code)
         dp.register_callback_query_handler(cls.get_calendar, dialog_cal_callback.filter(), state=cls.__dat)
-        dp.register_message_handler(callback=cls.result, state=cls.__result)
+        dp.register_message_handler(callback=cls.result, state=cls.__result_s)

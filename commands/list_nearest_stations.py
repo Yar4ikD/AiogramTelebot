@@ -1,7 +1,7 @@
 """
     В этом модуле прописана логика работы команды ТГ-бота: Список ближайших станций.
 """
-
+import emoji
 from aiogram import types, Dispatcher
 from aiogram.types import ContentType
 from aiogram.dispatcher import FSMContext
@@ -25,9 +25,9 @@ class Command(StatesGroup):
 
     info_start = f'Для получения списка ближайших станций укажите геолокацию.'
     info_select_type_stat = 'Выберите тип станции:'
-    info_radius = 'Укажите радиус поиска в км.'
+    info_radius = f'Укажите радиус поиска в км{emoji.emojize(":backhand_index_pointing_down:")}'
     conf_radius = f'Если все правильно, нажмите <b>{Buttons.but_continue.text}</b>' \
-                  f'\nВ противном случае введите название заново!'
+                  f'\nВ противном случае укажите радиус заново!'
     error_location = 'Я не понимаю, что это значит?\nЭто точно не ваша геолокация!' \
                      '\nПередайте мне геолокацию, для дальнейшей работы!'
     error_type_station = '<b>Выберите один вариант из списка.</b>\n<b>Не нужно</b> писать сообщение!' \
@@ -149,20 +149,20 @@ class Command(StatesGroup):
             async with state.proxy() as data:
                 lat, lng = data.get('lat'), data.get('lng')
                 station_type, distance = data.get('station'), data.get('radius')
-                query_data = f'{lat}, {lng}, {station_type}, {distance}' #', '.join((str(lat), str(lng), station_type, str(distance)))
+                query_data = f'{lat}, {lng}, {station_type}, {distance}'
 
-                result = await request(lat=lat, lng=lng, station_type=station_type, distance=distance)
+                result = request(lat=lat, lng=lng, station_type=station_type, distance=distance)
 
             if result:
                 History.add_command(command='Список ближайших станций', query=query_data, response=result)
 
-                await message.answer(text=result, reply_markup=Buttons.exit())
-                await state.finish()
+                await message.answer(text=result, reply_markup=Buttons.result())
+                # await state.finish()
                 logger.success('Result command')
 
             else:
                 logger.error(f'Result {result}')
-                await message.answer(text=cls.error_result, reply_markup=Buttons.error_result())
+                await message.answer(text=cls.error_result, reply_markup=Buttons.result())
 
     @classmethod
     async def register_command(cls, dp: Dispatcher) -> None:

@@ -1,6 +1,7 @@
 from aiogram import executor
 from loader import dp
-from commands import base_command, station_timetable, list_nearest_stations, schedule_flights_between_cities, response_history
+from commands import base_command, station_timetable, list_nearest_stations, schedule_flights_between_cities, \
+    response_history
 from database.codes_db import YandexDB
 from loguru import logger
 
@@ -15,13 +16,14 @@ async def on_start(_) -> None:
     """
 
     try:
+        logger.info('Bot start work')
         await YandexDB.connect_db()
         await base_command.register_command(dp)
         await response_history.Command.register_command(dp)
         await schedule_flights_between_cities.Command.register_command(dp)
         await station_timetable.Command.register_command(dp)
         await list_nearest_stations.Command.register_command(dp)
-        logger.info('Bot start work')
+
     except Exception as err:
         logger.exception(err)
 

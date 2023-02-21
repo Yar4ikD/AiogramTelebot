@@ -162,8 +162,6 @@ class Command(StatesGroup):
         Returns: None
 
         """
-        logger.info(f'Enter region departure > {message.text}')
-
         data_key = cls.data_keys[0]
         await cls._universal(message=message, state=state, data_key=data_key, msg_cont=cls.info_from_city,
                              msg_step_back=cls.info_start, msg_error=cls.msg_error_region,
@@ -286,7 +284,7 @@ class Command(StatesGroup):
                 transport, date = data.get('transport_type'), data.get('date')
                 query_data = f'{from_city}, {to_city}, {transport}, {date}'
 
-            result = await request(from_city=from_city, to_city=to_city, transport_type=transport, date=date)
+            result = request(from_city=from_city, to_city=to_city, transport_type=transport, date=date)
 
             if result and len(result) > 1:
                 History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)

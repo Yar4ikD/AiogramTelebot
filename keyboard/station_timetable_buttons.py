@@ -28,6 +28,7 @@ class Buttons(UniversalButtons):
         """
         but = (KeyboardButton(text=text) for text in cls.event_and_transport)
         buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2, one_time_keyboard=False).add(*but)
+        buttons.add(cls.but_out)
         return buttons
 
     @classmethod
@@ -50,16 +51,16 @@ class Buttons(UniversalButtons):
         button.add(cls.but_list_stations).add(cls.but_step_back).add(cls.but_out)
         return button
 
-    @classmethod
-    def button_result(cls) -> types.ReplyKeyboardMarkup:
-        """
-        Метод класса, создает кнопку ТГ-бота: Список команд, Вернутся назад, Выход.
-        Кнопки для конечного состояния команды бота.
-        Returns: button
-        """
-        buttons = ReplyKeyboardMarkup(resize_keyboard=True)
-        buttons.add(cls.but_list_command)
-        return buttons
+    # @classmethod
+    # def button_result(cls) -> types.ReplyKeyboardMarkup:
+    #     """
+    #     Метод класса, создает кнопку ТГ-бота: Список команд, Вернутся назад, Выход.
+    #     Кнопки для конечного состояния команды бота.
+    #     Returns: button
+    #     """
+    #     buttons = ReplyKeyboardMarkup(resize_keyboard=True)
+    #     buttons.add(cls.but_list_command).add(cls.but_out)
+    #     return buttons
 
     @classmethod
     def output(cls) -> types.ReplyKeyboardMarkup:
@@ -67,4 +68,3 @@ class Buttons(UniversalButtons):
         buttons.add(cls.but_step_back).add(cls.but_out)
 
         return buttons
-
