@@ -12,7 +12,7 @@ TRANSPORT_VALUES = {'plane': 'самолет', 'train': 'поезд', 'suburban'
                     'water': 'водный транспорт', 'helicopter': 'вертолет'}
 
 
-def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
+async def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
     """
     Функция создает параметры для GET запроса, API Список ближайших станций(словарь), из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -40,7 +40,7 @@ def request(lat: float, lng: float, station_type: str, distance: int) -> Optiona
         limit=30
     )
 
-    result = get_request(url=url, params=params)
+    result = await get_request(url=url, params=params)
 
     if result:
         return forming_response(data=result)

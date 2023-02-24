@@ -10,8 +10,8 @@ from typing import Dict, Optional
 from .base_get_requests import get_request
 
 
-def request(station_code: str, date=datetime.today(), transport: str = 'suburban',
-            event: str = 'arrival') -> Optional[str]:
+async def request(station_code: str, date=datetime.today(), transport: str = 'suburban',
+                  event: str = 'arrival') -> Optional[str]:
     """
     Функция создает параметры для GET запроса, API Расписание рейсов по станции(словарь), из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -40,7 +40,7 @@ def request(station_code: str, date=datetime.today(), transport: str = 'suburban
         'direction': 'all',
     }
     url = 'https://api.rasp.yandex.net/v3.0/schedule/'
-    result = get_request(url=url, params=params)
+    result = await get_request(url=url, params=params)
 
     if result:
         return forming_response(data=result)
@@ -80,7 +80,7 @@ def forming_response(data: Dict) -> Optional[str]:
             result += check_data('Время прибытия:\n', value, 'arrival')
             result += check_data('Дни курсирования: ', value, 'days')
 
-            result += check_data('Перевозчик: ', value, 'thread', 'carrier', 'title')
+            # result += check_data('Перевозчик: ', value, 'thread', 'carrier', 'title')
             result += check_data('Транспортное средство: ', value, 'thread', 'vehicle')
             result += check_data('', value, 'thread', 'transport_subtype', 'title')
 
@@ -106,7 +106,7 @@ def check_data(text: str, get_data: Dict,  key_1: str = None, key_2: str = None,
 
     """
     if key_1 and key_2 and key_3:
-        if get_data.get(key_1, {}).get(key_2, {}).get(key_3):
+        if get_data.get(key_1, {}).get(key_2, {}).get(key_3, None):
             data = get_data.get(key_1).get(key_2).get(key_3)
             return text + data + '\n'
 
