@@ -284,7 +284,7 @@ class Command(StatesGroup):
                 transport, date = data.get('transport_type'), data.get('date')
                 query_data = f'{from_city}, {to_city}, {transport}, {date}'
 
-            result = request(from_city=from_city, to_city=to_city, transport_type=transport, date=date)
+            result = await request(from_city=from_city, to_city=to_city, transport_type=transport, date=date)
 
             if result and len(result) > 1:
                 History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)

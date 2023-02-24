@@ -151,7 +151,7 @@ class Command(StatesGroup):
                 station_type, distance = data.get('station'), data.get('radius')
                 query_data = f'{lat}, {lng}, {station_type}, {distance}'
 
-                result = request(lat=lat, lng=lng, station_type=station_type, distance=distance)
+                result = await request(lat=lat, lng=lng, station_type=station_type, distance=distance)
 
             if result:
                 History.add_command(command='Список ближайших станций', query=query_data, response=result)

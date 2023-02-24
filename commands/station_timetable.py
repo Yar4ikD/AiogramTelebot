@@ -72,7 +72,6 @@ class Command(StatesGroup):
         await message.answer(text=cls.info_start, reply_markup=Buttons.event_transport())
 
     @classmethod
-    @logger.catch()
     async def _universal(cls, message: types.Message, state: FSMContext, data_key: str = None,
                          flag: str = None, reg_code: str = None, sett_code: str = None, transport: str = None,
                          msg_cont: str = None, msg_error: str = None, msg_step_back: str = None,
@@ -287,7 +286,7 @@ class Command(StatesGroup):
                 transport, event = data.get('transport'), data.get('event')
                 query_data = f'{code}, {date}, {transport}, {event}'
 
-            result = request(station_code=code, date=date, transport=transport, event=event)
+            result = await request(station_code=code, date=date, transport=transport, event=event)
 
             if result and len(result) > 1:
                 History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)

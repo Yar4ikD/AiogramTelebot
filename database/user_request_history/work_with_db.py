@@ -1,8 +1,10 @@
+"""Модуль работы с БД - history."""
 
 import peewee
 from loguru import logger
 from .model import *
 import datetime
+from typing import Optional
 
 
 class History:
@@ -72,7 +74,17 @@ class History:
             db.close()
 
     @classmethod
-    def select_data(cls, user_id: str, count: int):
+    def select_data(cls, user_id: str, count: int) -> Optional[str]:
+        """
+        Метод класса возвращает информацию с БД history - история запросов пользователя.
+        Метод работы с БД - select
+        Args:
+            user_id: Передает id пользователя
+            count: Передает ограничения по количеству записей.
+
+        Returns: result
+
+        """
         try:
             query = Command.select().join(User).where(User.user_id == user_id).limit(count)
 

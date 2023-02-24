@@ -4,12 +4,12 @@
     Функция модуля является базовой, для работы со всеми запросами к API Яндекс Расписаний и его разделов.
 """
 import json
-import requests
+import aiohttp
 from loguru import logger
 from typing import Dict, Optional
 
 
-def get_request(url: str, params: Dict) -> Optional[Dict]:
+async def get_request(url: str, params: Dict) -> Optional[Dict]:
     """
     Функция для работы с GET-запросами к API Яндекс Расписаний и его разделов.
 
@@ -23,14 +23,16 @@ def get_request(url: str, params: Dict) -> Optional[Dict]:
 
     """
     try:
-        request = requests.get(url=url, params=params)
+        async with aiohttp.ClientSession() as req:
+            async with req.get(url=url, params=params) as response:
 
-        if request.status_code != 200:
-            raise requests.RequestException(f'Статус ответа > {request.text}')
+                if response.status != 200:
+                    raise Exception(f'Статус ответа > {response.text}')
+                response = await response.text()
 
         logger.success('GET-запрос')
-        return json.loads(request.text)
+        return json.loads(response)
 
-    except requests.RequestException as err:
+    except Exception as err:
         logger.exception(err)
         return None

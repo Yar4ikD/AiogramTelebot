@@ -13,7 +13,7 @@ from .base_get_requests import get_request
 from loguru import logger
 
 
-def request(from_city: str, to_city: str, transport_type: str, date: str) -> Optional[str]:
+async def request(from_city: str, to_city: str, transport_type: str, date: str) -> Optional[str]:
     """
     Функция создает параметры для запроса к API Расписание рейсов между станциями(словарь) из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -45,7 +45,7 @@ def request(from_city: str, to_city: str, transport_type: str, date: str) -> Opt
 
     url = 'https://api.rasp.yandex.net/v3.0/search/'
 
-    result = get_request(url=url, params=params)
+    result = await get_request(url=url, params=params)
 
     if result:
         return forming_response(data=result)
