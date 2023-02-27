@@ -37,7 +37,7 @@ class Command(StatesGroup):
     __result_s = State()
 
     info_start = f'{emoji.emojize(":trolleybus:")} Выберите тип транспорта и направление'
-    info_region = 'Укажите <b>названия области</b>, без добавления: <b>обл, рег</b>\nПример:\n' \
+    info_region = 'Укажите <b>название области</b>, без добавления: <b>обл, рег</b>\nПример:\n' \
                   '<b>Ярославская</b>\n<b>Московская</b>\n<b>Псковская</b>'
     info_settlement = f'Укажите название населенного пункта {emoji.emojize(":backhand_index_pointing_down:")}'
     info_station = f'Укажите название станции {emoji.emojize(":backhand_index_pointing_down:")}'
@@ -134,7 +134,7 @@ class Command(StatesGroup):
             if response and len(response[1]) > 2:
 
                 info = f'Вот что я нашел:\n<b>{response[1]}\n</b>Если все правильно, нажмите ' \
-                       f'<b>{Buttons.but_continue.text}</b>\nВ противном случае укажете данные заново!'
+                       f'<b>{Buttons.but_continue.text}</b>\nВ противном случае укажите данные заново!'
 
                 logger.info(f'User data: {response[1]}')
                 async with state.proxy() as data:
@@ -162,7 +162,7 @@ class Command(StatesGroup):
 
             async with state.proxy() as data:
                 data['transport'], data['event'] = value
-                print(data)
+
             await cls.next()
             await message.answer(text=cls.info_region, reply_markup=ReplyKeyboardRemove())
         else:

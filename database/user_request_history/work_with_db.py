@@ -40,7 +40,7 @@ class History:
             id_, new_user = User.get_or_create(user_id=user_id, user_name=user_name, time_use=datetime.date.today())
             cls._user = id_
 
-        except peewee.Expression as err:
+        except Exception as err:
             logger.exception(err)
 
         else:
@@ -64,7 +64,7 @@ class History:
         try:
             Command.insert(select_command=command, query_data=query, response=response, user=cls._user).execute()
 
-        except peewee.Expression as err:
+        except Exception as err:
             logger.exception(err)
 
         else:
@@ -99,7 +99,7 @@ class History:
                 return result
 
             return None
-        except peewee.Expression as err:
+        except Exception as err:
             logger.exception(err)
 
         finally:

@@ -75,7 +75,7 @@ def forming_response(data: Dict) -> Optional[str]:
             for value in data.get('segments'):
                 result += check_data('\nНомер рейса: ', value, 'thread', 'number')
 
-                result += 'Отправления:\n'
+                result += '\nОтправления:\n'
                 result += check_data('Пункт: ', value, 'from', 'title')
                 result += check_data('Платформа: ', value, 'departure_platform')
                 result += check_data('Терминал: ', value, 'departure_terminal')
