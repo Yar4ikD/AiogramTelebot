@@ -11,21 +11,20 @@ from config import DB_PATH
 
 
 class YandexDB:
-
-    TABLE = 'rus'
-    REGION_TITLE = 'region_title'
-    REGION_CODES = 'region_codes'
-    TITLE_SETTLE = 'title_settle'
-    CODES_SETTLE = 'codes_settle'
-    DIRECTION = 'direction'
-    TITLE = 'title'
-    STATION_TYPE = 'station_type'
-    TRANSPORT_TYPE = 'transport_type'
-    YANDEX_CODE = 'yandex_code'
+    TABLE = "rus"
+    REGION_TITLE = "region_title"
+    REGION_CODES = "region_codes"
+    TITLE_SETTLE = "title_settle"
+    CODES_SETTLE = "codes_settle"
+    DIRECTION = "direction"
+    TITLE = "title"
+    STATION_TYPE = "station_type"
+    TRANSPORT_TYPE = "transport_type"
+    YANDEX_CODE = "yandex_code"
     name_db = DB_PATH
     base = None
 
-    def __init__(self, name_db: str = 'RusCode') -> None:
+    def __init__(self, name_db: str = "RusCode") -> None:
         """
         Магический метод класса, инициализирует БД.
         Создает БД с расширением db и производится подключение к конкретной БД.
@@ -34,10 +33,10 @@ class YandexDB:
         :param name_db: Передает имя файла БД, по умолчанию "code_rus"
         :type name_db: str
         """
-        if name_db.endswith('.db'):
+        if name_db.endswith(".db"):
             self.name = name_db
         else:
-            self.name = name_db + '.db'
+            self.name = name_db + ".db"
 
         with sq.connect(self.name) as con:  # производится подключение к БД
             self.__cur = con.cursor()  # Создается курсор из соединения с БД
@@ -47,7 +46,7 @@ class YandexDB:
     async def connect_db(cls) -> None:
         cls.base = await aiosqlite.connect(cls.name_db)
 
-    def add_table(self, table: str = 'user (?, ?, ?)') -> None:
+    def add_table(self, table: str = "user (?, ?, ?)") -> None:
         """
         Метод класса, создает таблицу БД.
 
@@ -69,7 +68,7 @@ class YandexDB:
         :rtype data: Tuple[Any]
         """
         if len(data) > 1:
-            symbol = ', '.join('?' * len(data))
+            symbol = ", ".join("?" * len(data))
             query = f"INSERT INTO {table} VALUES ({symbol})"
 
         else:
@@ -112,9 +111,11 @@ class YandexDB:
         """
         try:
             table = cls.TABLE
-            value = (f'%{user_msg}%', f'%{user_msg}')
-            query = f"SELECT {cls.REGION_CODES}, {cls.REGION_TITLE} FROM {table} " \
-                    f"WHERE {cls.REGION_TITLE} LIKE ? OR {cls.REGION_TITLE} LIKE ?"
+            value = (f"%{user_msg}%", f"%{user_msg}")
+            query = (
+                f"SELECT {cls.REGION_CODES}, {cls.REGION_TITLE} FROM {table} "
+                f"WHERE {cls.REGION_TITLE} LIKE ? OR {cls.REGION_TITLE} LIKE ?"
+            )
 
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()

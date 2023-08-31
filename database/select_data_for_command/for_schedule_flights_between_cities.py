@@ -11,7 +11,6 @@ from typing import Tuple, Optional
 
 
 class Select(YandexDB):
-
     @classmethod
     async def region(cls, user_msg: str) -> Optional[Tuple]:
         return await cls.select_region(user_msg)
@@ -31,11 +30,13 @@ class Select(YandexDB):
 
         """
         try:
-            value = (region_code, f'%{user_msg}%', f'%{user_msg}%')
+            value = (region_code, f"%{user_msg}%", f"%{user_msg}%")
 
-            query = f"SELECT {cls.CODES_SETTLE}, {cls.TITLE_SETTLE} FROM {cls.TABLE} WHERE {cls.REGION_CODES} LIKE ? " \
-                    f"AND ({cls.TITLE_SETTLE} LIKE ? OR {cls.DIRECTION} LIKE ?) " \
-                    f"AND {cls.STATION_TYPE} IN ('station', 'train_station', 'bus_station', 'airport')"
+            query = (
+                f"SELECT {cls.CODES_SETTLE}, {cls.TITLE_SETTLE} FROM {cls.TABLE} WHERE {cls.REGION_CODES} LIKE ? "
+                f"AND ({cls.TITLE_SETTLE} LIKE ? OR {cls.DIRECTION} LIKE ?) "
+                f"AND {cls.STATION_TYPE} IN ('station', 'train_station', 'bus_station', 'airport')"
+            )
 
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()

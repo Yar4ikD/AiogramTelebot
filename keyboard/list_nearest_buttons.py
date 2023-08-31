@@ -10,14 +10,13 @@ from .base import UniversalButtons
 
 
 class Buttons(UniversalButtons):
-
-    buttons_distance = ('5', '10', '20', '30', '40', '50')
+    buttons_distance = ("5", "10", "20", "30", "40", "50")
 
     but_stations_type = {
-        'Автовокзал': 'bus_station',
-        'Аэропорт': 'airport',
-        'Aвтобусная остановка': 'bus_stop',
-        'Вокзал': 'train_station'
+        "Автовокзал": "bus_station",
+        "Аэропорт": "airport",
+        "Aвтобусная остановка": "bus_stop",
+        "Вокзал": "train_station",
     }
 
     @classmethod
@@ -29,8 +28,10 @@ class Buttons(UniversalButtons):
         Returns: buttons
 
         """
-        but = KeyboardButton(text=f'Поделиться геолокацией {emoji.emojize(":globe_showing_Asia-Australia:")}',
-                             request_location=True)
+        but = KeyboardButton(
+            text=f'Поделиться геолокацией {emoji.emojize(":globe_showing_Asia-Australia:")}',
+            request_location=True,
+        )
         buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(but).add(cls.but_out)
         return buttons
 
@@ -88,17 +89,3 @@ class Buttons(UniversalButtons):
         buttons = ReplyKeyboardMarkup(resize_keyboard=True)
         buttons.add(cls.but_step_back).add(cls.but_out)
         return buttons
-
-    # @classmethod
-    # def exit(cls) -> ReplyKeyboardMarkup:
-    #     """
-    #     Метод класса создает кнопки и клавиатуру ТГ-бота.
-    #     Кнопка Вывести список команд.
-    #     Используется при корректном завершении работы команды.
-    #
-    #     Returns: buttons
-    #
-    #     """
-    #     buttons = ReplyKeyboardMarkup(resize_keyboard=True).add(cls.but_list_command)
-    #
-    #     return buttons

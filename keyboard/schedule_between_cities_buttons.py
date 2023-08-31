@@ -1,16 +1,16 @@
 """Модуль отвечает за создание клавиатуры и кнопок ТГ-бота, команды Расписание рейсов между городами."""
 
-import emoji
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from .base import UniversalButtons
 
 
 class Buttons(UniversalButtons):
     """
-        Класс наследует от базового класса UniversalButtons.
-        Методы класса отвечают за создание кнопок и клавиатуры ТГ-Бота.
+    Класс наследует от базового класса UniversalButtons.
+    Методы класса отвечают за создание кнопок и клавиатуры ТГ-Бота.
     """
-    transport_type = ('Самолет', 'Поезд', 'Электричка', 'Автобус')
+
+    transport_type = ("Самолет", "Поезд", "Электричка", "Автобус")
 
     @classmethod
     def true_continue(cls) -> ReplyKeyboardMarkup:

@@ -1,18 +1,24 @@
-# Yandex Timetable aiogram telegram bot
+<h1 align="center">Yandex Timetable Bot</h1> 
 
-Телеграм бот на Python, для предоставления информации пользователю о маршрутах и времени движения транспортных средств:
-1. Самолётов
-2. Поездов
-3. Электричек
-4. Автобусов
+Telegram bot in Python to provide information to the user about the routes and time of the movement of vehicles:
+1. Aircraft
+2. Trains
+3. Train
+4. Buses
 
-Бот работает с [API Яндекс Расписания.](https://yandex.ru/dev/rasp/)
+## Used software
+[Aiogram](https://aiogram.dev/).
+[Python](https://www.python.org/).
+[Peewee](http://docs.peewee-orm.com/en/latest/).
+[Loguru](https://loguru.readthedocs.io/en/stable/api/logger.html).
 
-## Начало работы
-### Основные шаги для запуска работы бота:
-1. Получить **\<token\>** бота
-2. Получить и активировать ключ API Яндекс Расписания (используется в каждом запросе к API)
-3. Установить зависимости с файла [requirements. txt](python_basic_diploma/requirements.txt)
+The bot works with API - [Yandex Timetables API.](https://yandex.ru/dev/rasp/)
+
+## Beginning of work
+### Basic steps to get the bot running:
+1. Get the bot's **\<token\>**
+2. Get and activate the Yandex Schedules API key (used in every API request)
+3. Install dependencies from the [requirements. txt](python_basic_diploma/requirements.txt)
 ```
 venv\Scripts\activate.bat - для Windows;
 source venv/bin/activate - для Linux и MacOS.
@@ -20,31 +26,31 @@ source venv/bin/activate - для Linux и MacOS.
 ```
 pip install -r requirements.txt
 ```
-4. В корне проекта создать файл **.env** и добавить:
+4. Create a **.env** file in the root of the project and add:
 ```
 TOKEN=
 YANDEX_API_KEY=
 ```
 
-## Структура проекта бота 
-- main.py (Файл, который содержит объект бота)
-- loader.py (Инициализация бота)
-- config.py (Файл с настройками)
-- requirements.txt (Библиотеки)
-- api/ (Пакет - работа с API)
-- commands/ (Пакет - обработка команд пользователя)
-- database/ (Пакет - работа с БД)
-- keyboard/ (Пакет - клавиатура и кнопки)
+## Bot project structure
+- main.py (The file that contains the bot object)
+- loader.py (Bot initialization)
+- config.py (File with settings)
+- requirements.txt (Libraries)
+- api/ (Package - work with API)
+- commands/ (Package - processing user commands)
+- database/ (Package - working with the database)
+- keyboard/ (Package - keyboard and buttons)
 
-## Команды бота
+## Bot commands
 
-### Команда - Старт
-Запуск бота, вывод пользователю приветствия и информацию о взаимодействии и командах бота.
+### Team - Start
+Starting the bot, displaying a greeting to the user and information about the interaction and commands of the bot.
 - [/start, start, старт]()
 
 <img src="images/start-work.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -55,13 +61,13 @@ commands/
 async def information_bot(message: types.Message) -> None
 ```
 
-### Команда - help
-Выводит список команд бота. 
+### Command - help
+Displays a list of bot commands.
 - [/help]()
 
 <img src="images/command-help.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -72,13 +78,13 @@ commands/
 async def base_list_command(message: types.Message) -> None
 ```
 
-### Команда - history
-Выводи историю запросов пользователя
+### Command - history
+Display the history of user requests
 - [/history]()
 
 <img src="images/command-history.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -92,16 +98,16 @@ keyboard/
     response_history.py
 ```
 
-### Команда - Расписание рейсов между городами
-Запрос позволяет получить список рейсов транспорта, следующих от указанного города отправления к указанному городу прибытия 
-и информацию по каждому рейсу.
+### Team - Flight schedule between cities
+The request allows you to get a list of transport flights from the specified city of departure to the specified city of arrival
+and information for each flight.
 
 <img src="images/com-fl-bet-c-01.jpg" width="500">
 <img src="images/com-fl-bet-c-02.jpg" width="500">
 <img src="images/com-fl-bet-c-03.jpg" width="500">
 <img src="images/com-fl-bet-c-04.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -118,14 +124,14 @@ keyboard/
     schedule_between_cities_buttons.py
 ```
 
-### Команда - Расписание рейсов по станции
-Запрос позволяет получить список рейсов, отправляющихся от указанной станции и информацию по каждому рейсу.
+### Team - Schedule of flights by station
+The request allows you to get a list of flights departing from the specified station and information on each flight.
 
 <img src="images/com-sch-stat-01.jpg" width="500">
 <img src="images/com-sch-stat-03.jpg" width="500">
 <img src="images/com-sch-stat-02.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -142,16 +148,16 @@ keyboard/
     station_timetable_buttons.py
 ```
 
-### Команда - Список ближайших станций
-Запрос позволяет получить список станций, находящихся в указанном радиусе от указанной точки.  
-Максимальное количество возвращаемых станций — 30.  
-Точка определяется географическими координатами (широтой и долготой)
+### Command - List of nearest stations
+The request allows you to get a list of stations located within the specified radius from the specified point.
+The maximum number of stations returned is 30.
+A point is defined by geographic coordinates (latitude and longitude)
 
 <img src="images/com-ls-stat-01.jpg" width="500">
 <img src="images/com-ls-stat-02.jpg" width="500">
 <img src="images/com-ls-stat-03.jpg" width="500">
 
-#### Модули отвечающие за работу команды:
+#### Modules responsible for the work of the command:
 
 ```
 commands/
@@ -164,10 +170,10 @@ keyboard/
     list_nearest_buttons.py
 ```
 
-### Команда - Список станций в населенном пункте
-Выводит список станций в населенном пункте.  
-Используется в команде - ***Расписание рейсов по станции***.  
-Максимальное количество возвращаемых станций — 30.
+### Command - List of stations in the locality
+Displays a list of stations in the locality.
+Used in the command - ***Schedule of flights by station***.
+The maximum number of stations returned is 30.
 
 <img src="images/com-sch-stat-02.jpg" width="500">
 

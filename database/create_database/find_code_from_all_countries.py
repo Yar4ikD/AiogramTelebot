@@ -2,7 +2,7 @@ import os
 import json
 from typing import Dict, Any, List
 from config import ALL_COUNTRIES_CODE_JSON_PATH
-from python_basic_diploma.api.get_all_countries_code import get_code_create_file_json
+from api.get_all_countries_code import get_code_create_file_json
 from .insert_into_db import writing_to_database
 
 """ Этот модуль предназначен для использования как отдельного сценария. """
@@ -10,7 +10,7 @@ from .insert_into_db import writing_to_database
 next_key = None
 
 
-def get_country(data_dict: Dict, country: str = 'Россия') -> None:
+def get_country(data_dict: Dict, country: str = "Россия") -> None:
     """
     Функция ищет название странны в массиве.
     Принимает 2 аргумента - это массив dict и названия странны.
@@ -23,10 +23,9 @@ def get_country(data_dict: Dict, country: str = 'Россия') -> None:
     :type data_dict: Dict
     :param country: Передает названия странны, для поиска в массиве.
     """
-    for keys in data_dict.get('countries', None):
-
-        if keys.get('title') == country:
-            get_regions(keys.get('regions', None))
+    for keys in data_dict.get("countries", None):
+        if keys.get("title") == country:
+            get_regions(keys.get("regions", None))
 
 
 def get_regions(regions_data: List[Any]) -> None:
@@ -55,12 +54,12 @@ def get_regions(regions_data: List[Any]) -> None:
                 next_key = val
 
             elif isinstance(val, dict):
-                if val.get('yandex_code', None):
-                    key = 'region_' + key
-                    table_dict[key] = val.get('yandex_code')
+                if val.get("yandex_code", None):
+                    key = "region_" + key
+                    table_dict[key] = val.get("yandex_code")
 
             else:
-                key = 'region_' + key
+                key = "region_" + key
                 table_dict[key] = val
 
         if isinstance(next_key, list):
@@ -86,20 +85,17 @@ def get_settlements(settle_data: list, columns_table: dict) -> None:
     global next_key
 
     for value in settle_data:
-
         for key, val in value.items():
-
             if isinstance(val, list):
                 next_key = val
 
             elif isinstance(val, dict):
-
-                if val.get('yandex_code', None):
-                    key = key + '_settle'
-                    columns_table[key] = val.get('yandex_code', None)
+                if val.get("yandex_code", None):
+                    key = key + "_settle"
+                    columns_table[key] = val.get("yandex_code", None)
 
             else:
-                key = key + '_settle'
+                key = key + "_settle"
                 columns_table[key] = val
 
         if isinstance(next_key, list):
@@ -124,9 +120,7 @@ def get_stations(stations_data: list, columns_table: dict) -> None:
     :param columns_table: Принимает инициализированный словарь
     """
     for value in stations_data:
-
         for key, val in value.items():
-
             if isinstance(val, list):
                 get_codes(val, columns_table)
 
@@ -157,18 +151,16 @@ def get_codes(code_data: list, columns_table: dict) -> None:
 
 
 def main():
-
     if not os.path.exists(ALL_COUNTRIES_CODE_JSON_PATH):
         get_code_create_file_json(ALL_COUNTRIES_CODE_JSON_PATH)
 
-    with open(ALL_COUNTRIES_CODE_JSON_PATH, 'r') as file:
-        print('Запись в БД...')
+    with open(ALL_COUNTRIES_CODE_JSON_PATH, "r") as file:
+        print("Запись в БД...")
         data = json.load(file)
         get_country(data)
 
-    print('Загрузка БД завершена!')
+    print("Загрузка БД завершена!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

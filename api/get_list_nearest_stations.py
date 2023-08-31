@@ -8,11 +8,19 @@ from config import YANDEX_API_KEY
 from typing import Dict, Optional
 from loguru import logger
 
-TRANSPORT_VALUES = {'plane': 'самолет', 'train': 'поезд', 'suburban': 'электричка', 'bus': 'автобус',
-                    'water': 'водный транспорт', 'helicopter': 'вертолет'}
+TRANSPORT_VALUES = {
+    "plane": "самолет",
+    "train": "поезд",
+    "suburban": "электричка",
+    "bus": "автобус",
+    "water": "водный транспорт",
+    "helicopter": "вертолет",
+}
 
 
-async def request(lat: float, lng: float, station_type: str, distance: int) -> Optional[str]:
+async def request(
+    lat: float, lng: float, station_type: str, distance: int
+) -> Optional[str]:
     """
     Функция создает параметры для GET запроса, API Список ближайших станций(словарь), из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -30,14 +38,14 @@ async def request(lat: float, lng: float, station_type: str, distance: int) -> O
 
     Returns: forming_response or None
     """
-    url = 'https://api.rasp.yandex.net/v3.0/nearest_stations/'
+    url = "https://api.rasp.yandex.net/v3.0/nearest_stations/"
     params = dict(
         apikey=YANDEX_API_KEY,
         lat=lat,
         lng=lng,
         station_types=station_type,
         distance=distance,
-        limit=30
+        limit=30,
     )
 
     result = await get_request(url=url, params=params)
@@ -64,24 +72,28 @@ def forming_response(data: Dict) -> Optional[str]:
     result = None
 
     try:
-        if data.get('stations'):
+        if data.get("stations"):
             result = f'Найденная информация{emoji.emojize(":information:")}'
 
-            for value in data.get('stations'):
-                if value.get('station_type_name'):
-                    result += '\nТип и название станции:\n{type} '.format(type=value.get('station_type_name'))
-
-                if value.get('title'):
-                    result += '- {name}\n'.format(name=value.get('title'))
-
-                if value.get('transport_type'):
-                    result += 'Тип транспорта: {type}\n'.format(
-                        type=TRANSPORT_VALUES.get(value.get('transport_type'))
+            for value in data.get("stations"):
+                if value.get("station_type_name"):
+                    result += "\nТип и название станции:\n{type} ".format(
+                        type=value.get("station_type_name")
                     )
-                if value.get('distance'):
-                    result += 'Расстояние от вас: {km} км.\n'.format(km=int(value.get('distance')))
 
-        logger.success('get_list_nearest_station > func forming_response')
+                if value.get("title"):
+                    result += "- {name}\n".format(name=value.get("title"))
+
+                if value.get("transport_type"):
+                    result += "Тип транспорта: {type}\n".format(
+                        type=TRANSPORT_VALUES.get(value.get("transport_type"))
+                    )
+                if value.get("distance"):
+                    result += "Расстояние от вас: {km} км.\n".format(
+                        km=int(value.get("distance"))
+                    )
+
+        logger.success("get_list_nearest_station > func forming_response")
         return result
 
     except Exception as err:

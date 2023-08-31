@@ -1,6 +1,5 @@
 """Модуль работы с БД - history."""
 
-import peewee
 from loguru import logger
 from .model import *
 import datetime
@@ -10,7 +9,7 @@ from typing import Optional
 class History:
     _user = None
     db.connect()
-    logger.info('Connect | history.db')
+    logger.info("Connect | history.db")
 
     # def __int__(self):
 
@@ -23,7 +22,7 @@ class History:
 
         """
         db.create_tables([User, Command])
-        logger.success('Create Tables')
+        logger.success("Create Tables")
 
     @classmethod
     def add_user(cls, user_id: int, user_name: str) -> None:
@@ -37,14 +36,16 @@ class History:
 
         """
         try:
-            id_, new_user = User.get_or_create(user_id=user_id, user_name=user_name, time_use=datetime.date.today())
+            id_, new_user = User.get_or_create(
+                user_id=user_id, user_name=user_name, time_use=datetime.date.today()
+            )
             cls._user = id_
 
         except Exception as err:
             logger.exception(err)
 
         else:
-            logger.success('history.db | func | add_user')
+            logger.success("history.db | func | add_user")
 
         finally:
             db.close()
@@ -62,13 +63,18 @@ class History:
 
         """
         try:
-            Command.insert(select_command=command, query_data=query, response=response, user=cls._user).execute()
+            Command.insert(
+                select_command=command,
+                query_data=query,
+                response=response,
+                user=cls._user,
+            ).execute()
 
         except Exception as err:
             logger.exception(err)
 
         else:
-            logger.success('history.db | func | add_command')
+            logger.success("history.db | func | add_command")
 
         finally:
             db.close()
@@ -86,15 +92,16 @@ class History:
 
         """
         try:
-            query = Command.select().join(User).where(User.user_id == user_id).limit(count)
+            query = (
+                Command.select().join(User).where(User.user_id == user_id).limit(count)
+            )
 
             if len(query):
-                logger.success('history.db | func | select_data')
+                logger.success("history.db | func | select_data")
 
-                result = ''
+                result = ""
                 for data in query:
-
-                    result += f'\n{data.select_command}\nДанные:\n{data.query_data}\nРезультат:\n{data.response}\n'
+                    result += f"\n{data.select_command}\nДанные:\n{data.query_data}\nРезультат:\n{data.response}\n"
 
                 return result
 

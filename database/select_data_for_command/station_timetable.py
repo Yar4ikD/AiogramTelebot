@@ -10,7 +10,6 @@ from typing import Optional, Tuple
 
 
 class Select(YandexDB):
-
     @staticmethod
     def forming_response(data) -> Optional[str]:
         """
@@ -22,20 +21,44 @@ class Select(YandexDB):
         Returns: result or None
 
         """
-        transport = {'plane': 'Cамолет', 'train': 'Поезд', 'suburban': 'Электричка', 'water': 'Водный транспорт',
-                     'helicopter': 'Вертолет', 'bus': 'Автобус'}
-        type_station = {'station': 'Станция', 'platform': 'Платформа', 'stop': 'Остановочный пункт',
-                        'checkpoint': 'Блок-пост', 'post': 'Пост', 'crossing': 'Разъезд',
-                        'overtaking_point': 'Обгонный пункт', 'train_station': 'Вокзал', 'airport': 'Аэропорт',
-                        'bus_station': 'Автовокзал', 'bus_stop': 'Автобусная остановка', 'unknown': 'Станция без типа',
-                        'port': 'Порт', 'port_point': 'Портпункт', 'wharf': 'Пристань', 'river_port': 'Речной вокзал',
-                        'marine_station': 'Морской вокзал'}
+        transport = {
+            "plane": "Cамолет",
+            "train": "Поезд",
+            "suburban": "Электричка",
+            "water": "Водный транспорт",
+            "helicopter": "Вертолет",
+            "bus": "Автобус",
+        }
+        type_station = {
+            "station": "Станция",
+            "platform": "Платформа",
+            "stop": "Остановочный пункт",
+            "checkpoint": "Блок-пост",
+            "post": "Пост",
+            "crossing": "Разъезд",
+            "overtaking_point": "Обгонный пункт",
+            "train_station": "Вокзал",
+            "airport": "Аэропорт",
+            "bus_station": "Автовокзал",
+            "bus_stop": "Автобусная остановка",
+            "unknown": "Станция без типа",
+            "port": "Порт",
+            "port_point": "Портпункт",
+            "wharf": "Пристань",
+            "river_port": "Речной вокзал",
+            "marine_station": "Морской вокзал",
+        }
         try:
-            result = '<b>Список станций и остановок:</b>\n'
+            result = "<b>Список станций и остановок:</b>\n"
             for title, st_type, tr_type in data:
-                tmp = '\n<b>Название станции</b>:\n{name_st}\n<b>Тип</b>: {type}\n' \
-                      '<b>Виды транспорта</b>: {transport}\n'.format(name_st=title, type=type_station.get(st_type),
-                                                                     transport=transport.get(tr_type, '-'))
+                tmp = (
+                    "\n<b>Название станции</b>:\n{name_st}\n<b>Тип</b>: {type}\n"
+                    "<b>Виды транспорта</b>: {transport}\n".format(
+                        name_st=title,
+                        type=type_station.get(st_type),
+                        transport=transport.get(tr_type, "-"),
+                    )
+                )
                 result += tmp
             return result
 
@@ -57,11 +80,13 @@ class Select(YandexDB):
 
         """
         try:
-            value = (region_code, f'%{user_msg}%', f'%{user_msg}%')
+            value = (region_code, f"%{user_msg}%", f"%{user_msg}%")
 
-            query = f"SELECT {cls.CODES_SETTLE}, {cls.TITLE_SETTLE} FROM {cls.TABLE} WHERE {cls.REGION_CODES} LIKE ? " \
-                    f"AND ({cls.TITLE_SETTLE} LIKE ? OR {cls.DIRECTION} LIKE ?) " \
-                    f"AND {cls.STATION_TYPE} IN ('station', 'train_station', 'bus_station', 'airport', 'bus_stop')"
+            query = (
+                f"SELECT {cls.CODES_SETTLE}, {cls.TITLE_SETTLE} FROM {cls.TABLE} WHERE {cls.REGION_CODES} LIKE ? "
+                f"AND ({cls.TITLE_SETTLE} LIKE ? OR {cls.DIRECTION} LIKE ?) "
+                f"AND {cls.STATION_TYPE} IN ('station', 'train_station', 'bus_station', 'airport', 'bus_stop')"
+            )
 
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()
@@ -88,8 +113,10 @@ class Select(YandexDB):
         try:
             value = (settlement_code, transport)
 
-            query = f"SELECT {cls.TITLE}, {cls.STATION_TYPE}, {cls.TRANSPORT_TYPE} FROM {cls.TABLE} " \
-                    f"WHERE {cls.CODES_SETTLE} LIKE ? AND {cls.TRANSPORT_TYPE} LIKE ?"
+            query = (
+                f"SELECT {cls.TITLE}, {cls.STATION_TYPE}, {cls.TRANSPORT_TYPE} FROM {cls.TABLE} "
+                f"WHERE {cls.CODES_SETTLE} LIKE ? AND {cls.TRANSPORT_TYPE} LIKE ?"
+            )
 
             cursor = await cls.base.execute(query, value)
             rows = await cursor.fetchmany(size=30)
@@ -99,11 +126,15 @@ class Select(YandexDB):
             return None
 
         else:
-            logger.success('func | list_station')
-            return cls.forming_response(data=rows)  # вызываем метод для обработки ответа БД, возвращает str
+            logger.success("func | list_station")
+            return cls.forming_response(
+                data=rows
+            )  # вызываем метод для обработки ответа БД, возвращает str
 
     @classmethod
-    async def yandex_code(cls, user_msg: str, settlement: str, transport_type: str) -> Optional[Tuple]:
+    async def yandex_code(
+        cls, user_msg: str, settlement: str, transport_type: str
+    ) -> Optional[Tuple]:
         """
         Метод класса делает запрос к БД, для получения яндекс - кода транспортной станции, поле БД YANDEX_CODE.
         Args:
@@ -118,11 +149,13 @@ class Select(YandexDB):
         """
 
         try:
-            logger.success('func | yandex_code')
-            value = (settlement, f'%{user_msg}%', f'%{user_msg}%', transport_type)
+            logger.success("func | yandex_code")
+            value = (settlement, f"%{user_msg}%", f"%{user_msg}%", transport_type)
 
-            query = f"SELECT {cls.YANDEX_CODE}, {cls.TITLE} FROM {cls.TABLE} WHERE {cls.CODES_SETTLE} LIKE ? " \
-                    f"AND ({cls.TITLE} LIKE ? OR {cls.DIRECTION} LIKE ?) AND {cls.TRANSPORT_TYPE} LIKE ?"
+            query = (
+                f"SELECT {cls.YANDEX_CODE}, {cls.TITLE} FROM {cls.TABLE} WHERE {cls.CODES_SETTLE} LIKE ? "
+                f"AND ({cls.TITLE} LIKE ? OR {cls.DIRECTION} LIKE ?) AND {cls.TRANSPORT_TYPE} LIKE ?"
+            )
 
             cursor = await cls.base.execute(query, value)
             row = await cursor.fetchone()

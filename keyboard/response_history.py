@@ -10,7 +10,7 @@ from keyboard.base import UniversalButtons
 
 
 class Buttons(UniversalButtons):
-    count = ('2', '5', '7', '10')
+    count = ("2", "5", "7", "10")
 
     @classmethod
     def how_many(cls) -> ReplyKeyboardMarkup:
@@ -22,5 +22,9 @@ class Buttons(UniversalButtons):
 
         """
         but = (KeyboardButton(text=text) for text in cls.count)
-        buttons = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2).add(*but).add(cls.but_out)
+        buttons = (
+            ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+            .add(*but)
+            .add(cls.but_out)
+        )
         return buttons

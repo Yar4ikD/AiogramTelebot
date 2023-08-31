@@ -10,8 +10,12 @@ from typing import Dict, Optional
 from .base_get_requests import get_request
 
 
-async def request(station_code: str, date=datetime.today(), transport: str = 'suburban',
-                  event: str = 'arrival') -> Optional[str]:
+async def request(
+    station_code: str,
+    date=datetime.today(),
+    transport: str = "suburban",
+    event: str = "arrival",
+) -> Optional[str]:
     """
     Функция создает параметры для GET запроса, API Расписание рейсов по станции(словарь), из полученных аргументов.
     Вызывает функцию get_request, модуля base_get_requests и передает в качестве аргументов переменные:
@@ -31,15 +35,15 @@ async def request(station_code: str, date=datetime.today(), transport: str = 'su
 
     """
     params = {
-        'apikey': YANDEX_API_KEY,
-        'station': station_code,
-        'format': 'json',
-        'date': date,
-        'transport_types': transport,
-        'event': event,
-        'direction': 'all',
+        "apikey": YANDEX_API_KEY,
+        "station": station_code,
+        "format": "json",
+        "date": date,
+        "transport_types": transport,
+        "event": event,
+        "direction": "all",
     }
-    url = 'https://api.rasp.yandex.net/v3.0/schedule/'
+    url = "https://api.rasp.yandex.net/v3.0/schedule/"
     result = await get_request(url=url, params=params)
 
     if result:
@@ -65,24 +69,24 @@ def forming_response(data: Dict) -> Optional[str]:
     result = None
 
     try:
-        result = check_data('Станция: ', data, 'station', 'title')
-        result += check_data('Тип станции: ', data, 'station', 'station_type_name')
-        result += check_data('Дата: ', data, 'date')
+        result = check_data("Станция: ", data, "station", "title")
+        result += check_data("Тип станции: ", data, "station", "station_type_name")
+        result += check_data("Дата: ", data, "date")
 
-        for count, value in enumerate(data.get('schedule')):
+        for count, value in enumerate(data.get("schedule")):
             if count >= limit:
                 break
-            result += check_data('\nНазвание нитки:\n',  value, 'thread', 'title')
-            result += check_data('Номер рейса: ', value, 'thread', 'number')
-            result += check_data('Терминал аэропорта: ', value, 'terminal')
-            result += check_data('Платформа отправления:\n', value, 'platform')
-            result += check_data('Время отправления:\n', value, 'departure')
-            result += check_data('Время прибытия:\n', value, 'arrival')
-            result += check_data('Дни курсирования: ', value, 'days')
+            result += check_data("\nНазвание нитки:\n", value, "thread", "title")
+            result += check_data("Номер рейса: ", value, "thread", "number")
+            result += check_data("Терминал аэропорта: ", value, "terminal")
+            result += check_data("Платформа отправления:\n", value, "platform")
+            result += check_data("Время отправления:\n", value, "departure")
+            result += check_data("Время прибытия:\n", value, "arrival")
+            result += check_data("Дни курсирования: ", value, "days")
 
             # result += check_data('Перевозчик: ', value, 'thread', 'carrier', 'title')
-            result += check_data('Транспортное средство: ', value, 'thread', 'vehicle')
-            result += check_data('', value, 'thread', 'transport_subtype', 'title')
+            result += check_data("Транспортное средство: ", value, "thread", "vehicle")
+            result += check_data("", value, "thread", "transport_subtype", "title")
 
         return result
 
@@ -91,7 +95,9 @@ def forming_response(data: Dict) -> Optional[str]:
         return None
 
 
-def check_data(text: str, get_data: Dict,  key_1: str = None, key_2: str = None, key_3: str = None) -> str:
+def check_data(
+    text: str, get_data: Dict, key_1: str = None, key_2: str = None, key_3: str = None
+) -> str:
     """
     Функция проверки данных словаря.
 
@@ -108,28 +114,30 @@ def check_data(text: str, get_data: Dict,  key_1: str = None, key_2: str = None,
     if key_1 and key_2 and key_3:
         if get_data.get(key_1, {}).get(key_2, {}).get(key_3, None):
             data = get_data.get(key_1).get(key_2).get(key_3)
-            return text + data + '\n'
+            return text + data + "\n"
 
     elif key_1 and key_2:
         if get_data.get(key_1, {}).get(key_2):
             data = get_data.get(key_1).get(key_2)
-            return text + data + '\n'
+            return text + data + "\n"
 
     else:
         if get_data.get(key_1):
             data = get_data.get(key_1)
 
-            if key_1 in ('departure', 'arrival'):
-                data = data.split('+')
+            if key_1 in ("departure", "arrival"):
+                data = data.split("+")
 
                 if len(data) == 2:
-                    tmp_t_zone, tmp_t_delta = data[0], data[1].split(':')
+                    tmp_t_zone, tmp_t_delta = data[0], data[1].split(":")
                     normal_date = datetime.fromisoformat(tmp_t_zone)
-                    data = normal_date + timedelta(hours=int(tmp_t_delta[0]), minutes=int(tmp_t_delta[1]))
+                    data = normal_date + timedelta(
+                        hours=int(tmp_t_delta[0]), minutes=int(tmp_t_delta[1])
+                    )
 
                 else:
                     data = datetime.fromisoformat(data[0])
 
-            return text + str(data) + '\n'
+            return text + str(data) + "\n"
 
-    return ''
+    return ""

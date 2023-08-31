@@ -9,7 +9,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup
 from aiogram.utils.callback_data import CallbackData
-from aiogram_calendar import dialog_cal_callback, DialogCalendar
+from aiogram_calendar import dialog_cal_callback
 from database.select_data_for_command.station_timetable import Select
 from database.user_request_history.work_with_db import History
 from keyboard.station_timetable_buttons import Buttons
@@ -17,18 +17,14 @@ from api.get_schedule_station import request
 from loguru import logger
 from .base_command import base_stop_working
 
-# base_dir = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(os.path.join(base_dir, '../database', '../loader.py'))
-#
-# from loader import dp, bot
-
 
 class Command(StatesGroup):
     """
-        Подкласс наследует от базового класса StatesGroup.
-        В классе прописана работа команды ТГ-бота: Расписание рейсов по станции.
-        Приватные атрибуты класса это FSM состояние ТГ-бота.
+    Подкласс наследует от базового класса StatesGroup.
+    В классе прописана работа команды ТГ-бота: Расписание рейсов по станции.
+    Приватные атрибуты класса это FSM состояние ТГ-бота.
     """
+
     __event_and_transport = State()
     __region = State()
     __settlement = State()
@@ -36,22 +32,34 @@ class Command(StatesGroup):
     __dat = State()
     __result_s = State()
 
-    info_start = f'{emoji.emojize(":trolleybus:")} Выберите тип транспорта и направление'
-    info_region = 'Укажите <b>название области</b>, без добавления: <b>обл, рег</b>\nПример:\n' \
-                  '<b>Ярославская</b>\n<b>Московская</b>\n<b>Псковская</b>'
+    info_start = (
+        f'{emoji.emojize(":trolleybus:")} Выберите тип транспорта и направление'
+    )
+    info_region = (
+        "Укажите <b>название области</b>, без добавления: <b>обл, рег</b>\nПример:\n"
+        "<b>Ярославская</b>\n<b>Московская</b>\n<b>Псковская</b>"
+    )
     info_settlement = f'Укажите название населенного пункта {emoji.emojize(":backhand_index_pointing_down:")}'
-    info_station = f'Укажите название станции {emoji.emojize(":backhand_index_pointing_down:")}'
+    info_station = (
+        f'Укажите название станции {emoji.emojize(":backhand_index_pointing_down:")}'
+    )
     info_date = f'Укажите дату {emoji.emojize(":calendar:")}'
-    info_result = 'По вашему запросу найдено:'
-    msg_error_region = f'Я не нашел в базе такой области.' \
-                       f'\nПопробуйте еще раз {emoji.emojize(":backhand_index_pointing_down:")}'
-    msg_error_sett = 'Я не нашел в базе такого населенного пункта.\nУкажите название еще раз...'
-    msg_error_list_st = 'К сожалению в этом населенном пункте, нет станций!'
-    msg_error_station = 'Я не нашел в базе такой станции.\nУкажите название еще раз...'
-    error_msg_no_sense = f'Что это значить, я не понимаю Вас{emoji.emojize(":person_shrugging:")}' \
-                         f'\nВыберите одну из команд {emoji.emojize(":backhand_index_pointing_down:")}'
+    info_result = "По вашему запросу найдено:"
+    msg_error_region = (
+        f"Я не нашел в базе такой области."
+        f'\nПопробуйте еще раз {emoji.emojize(":backhand_index_pointing_down:")}'
+    )
+    msg_error_sett = (
+        "Я не нашел в базе такого населенного пункта.\nУкажите название еще раз..."
+    )
+    msg_error_list_st = "К сожалению в этом населенном пункте, нет станций!"
+    msg_error_station = "Я не нашел в базе такой станции.\nУкажите название еще раз..."
+    error_msg_no_sense = (
+        f'Что это значить, я не понимаю Вас{emoji.emojize(":person_shrugging:")}'
+        f'\nВыберите одну из команд {emoji.emojize(":backhand_index_pointing_down:")}'
+    )
 
-    data_keys = ('region', 'city', 'station_code', 'transport', 'event', 'date')
+    data_keys = ("region", "city", "station_code", "transport", "event", "date")
 
     @classmethod
     async def start(cls, message: types.Message, state: FSMContext) -> None:
@@ -67,16 +75,28 @@ class Command(StatesGroup):
         Returns: None
 
         """
-        logger.info(f'User id: {message.from_user.id} | command: {message.text}')
+        logger.info(f"User id: {message.from_user.id} | command: {message.text}")
         await cls.__event_and_transport.set()  # запускаем FSM состояния бота
-        await message.answer(text=cls.info_start, reply_markup=Buttons.event_transport())
+        await message.answer(
+            text=cls.info_start, reply_markup=Buttons.event_transport()
+        )
 
     @classmethod
-    async def _universal(cls, message: types.Message, state: FSMContext, data_key: str = None,
-                         flag: str = None, reg_code: str = None, sett_code: str = None, transport: str = None,
-                         msg_cont: str = None, msg_error: str = None, msg_step_back: str = None,
-                         markup_back=Buttons.tru_continue(),
-                         markup: ReplyKeyboardMarkup = ReplyKeyboardRemove()) -> None:
+    async def _universal(
+        cls,
+        message: types.Message,
+        state: FSMContext,
+        data_key: str = None,
+        flag: str = None,
+        reg_code: str = None,
+        sett_code: str = None,
+        transport: str = None,
+        msg_cont: str = None,
+        msg_error: str = None,
+        msg_step_back: str = None,
+        markup_back=Buttons.tru_continue(),
+        markup: ReplyKeyboardMarkup = ReplyKeyboardRemove(),
+    ) -> None:
         """
         Метод класса для обработки сообщений от пользователя.
         Является универсальным обработчиком для 3х состояний бота:
@@ -100,43 +120,58 @@ class Command(StatesGroup):
         Returns: None
         """
 
-        if message.text == Buttons.but_continue.text:  # подтверждение ввода данных, продолжение работы команды
+        if (
+            message.text == Buttons.but_continue.text
+        ):  # подтверждение ввода данных, продолжение работы команды
             await cls.next()  # переключает FSM состояния
             await message.answer(text=msg_cont, reply_markup=markup)
             await message.delete()
 
-        elif message.text == Buttons.but_step_back.text:  # возвращаем бота в предыдущее FSM состояния
+        elif (
+            message.text == Buttons.but_step_back.text
+        ):  # возвращаем бота в предыдущее FSM состояния
             await cls.previous()
             await message.reply(text=msg_step_back, reply_markup=markup_back)
 
-        elif message.text == Buttons.but_list_stations.text:  # выводит список станций в населенном пункте
+        elif (
+            message.text == Buttons.but_list_stations.text
+        ):  # выводит список станций в населенном пункте
             async with state.proxy() as data:
                 c_code, tr_code = data.get(cls.data_keys[1]), data.get(cls.data_keys[3])
-            response = await Select.list_station(settlement_code=c_code, transport=tr_code)
+            response = await Select.list_station(
+                settlement_code=c_code, transport=tr_code
+            )
 
             if response:
                 await message.answer(text=response)
             else:
-                await message.reply(text=cls.msg_error_list_st, reply_markup=markup_back)
+                await message.reply(
+                    text=cls.msg_error_list_st, reply_markup=markup_back
+                )
 
         else:
-            user_msg = message.text.capitalize().strip()  # обработка сообщения от пользователя
+            user_msg = (
+                message.text.capitalize().strip()
+            )  # обработка сообщения от пользователя
 
             if flag == cls.data_keys[1]:  # ищет населенный пункт в БД
                 response = await Select.settle(user_msg=user_msg, region_code=reg_code)
 
             elif flag == cls.data_keys[2]:  # ищет станцию и яндекс код в БД
-                response = await Select.yandex_code(user_msg=user_msg, settlement=sett_code, transport_type=transport)
+                response = await Select.yandex_code(
+                    user_msg=user_msg, settlement=sett_code, transport_type=transport
+                )
 
             else:  # ищет регион в БД
                 response = await Select.select_region(user_msg=user_msg)
 
             if response and len(response[1]) > 2:
+                info = (
+                    f"Вот что я нашел:\n<b>{response[1]}\n</b>Если все правильно, нажмите "
+                    f"<b>{Buttons.but_continue.text}</b>\nВ противном случае укажите данные заново!"
+                )
 
-                info = f'Вот что я нашел:\n<b>{response[1]}\n</b>Если все правильно, нажмите ' \
-                       f'<b>{Buttons.but_continue.text}</b>\nВ противном случае укажите данные заново!'
-
-                logger.info(f'User data: {response[1]}')
+                logger.info(f"User data: {response[1]}")
                 async with state.proxy() as data:
                     data[data_key] = response[0]  # записываем код из БД
                 await message.reply(text=info, reply_markup=Buttons.tru_continue())
@@ -146,7 +181,9 @@ class Command(StatesGroup):
 
     @classmethod
     @logger.catch()
-    async def get_event_and_type_transport(cls, message: types.Message, state: FSMContext) -> None:
+    async def get_event_and_type_transport(
+        cls, message: types.Message, state: FSMContext
+    ) -> None:
         """
         Метод класса обработчик, принимает от пользователя: Тип транспорта, прибытие или отправление.
         Записывает ответ и переключает FSM состояние на __region.
@@ -157,16 +194,20 @@ class Command(StatesGroup):
         Returns: None
         """
         if message.text in Buttons.event_and_transport:
-            logger.info(f'Enter Type transport/event: {message.text}')
+            logger.info(f"Enter Type transport/event: {message.text}")
             value = Buttons.event_and_transport.get(message.text)
 
             async with state.proxy() as data:
-                data['transport'], data['event'] = value
+                data["transport"], data["event"] = value
 
             await cls.next()
-            await message.answer(text=cls.info_region, reply_markup=ReplyKeyboardRemove())
+            await message.answer(
+                text=cls.info_region, reply_markup=ReplyKeyboardRemove()
+            )
         else:
-            await message.reply(text=cls.error_msg_no_sense, reply_markup=Buttons.event_transport())
+            await message.reply(
+                text=cls.error_msg_no_sense, reply_markup=Buttons.event_transport()
+            )
 
     @classmethod
     async def region(cls, message: types.Message, state: FSMContext) -> None:
@@ -183,9 +224,15 @@ class Command(StatesGroup):
 
         """
         key = cls.data_keys[0]
-        await cls._universal(message=message, state=state, data_key=key, msg_cont=cls.info_settlement,
-                             msg_step_back=cls.info_start, msg_error=cls.msg_error_region,
-                             markup_back=Buttons.event_transport())
+        await cls._universal(
+            message=message,
+            state=state,
+            data_key=key,
+            msg_cont=cls.info_settlement,
+            msg_step_back=cls.info_start,
+            msg_error=cls.msg_error_region,
+            markup_back=Buttons.event_transport(),
+        )
 
     @classmethod
     async def settlement(cls, message: types.Message, state: FSMContext) -> None:
@@ -205,9 +252,17 @@ class Command(StatesGroup):
         async with state.proxy() as data:
             reg_code = data.get(cls.data_keys[0])
 
-        await cls._universal(message=message, state=state, flag=key, data_key=key, reg_code=reg_code,
-                             msg_step_back=cls.info_region, msg_cont=cls.info_station, msg_error=cls.msg_error_sett,
-                             markup=Buttons.show_list())
+        await cls._universal(
+            message=message,
+            state=state,
+            flag=key,
+            data_key=key,
+            reg_code=reg_code,
+            msg_step_back=cls.info_region,
+            msg_cont=cls.info_station,
+            msg_error=cls.msg_error_sett,
+            markup=Buttons.show_list(),
+        )
 
     @classmethod
     async def station(cls, message: types.Message, state: FSMContext) -> None:
@@ -229,15 +284,27 @@ class Command(StatesGroup):
             reg_code, city_code = data.get(cls.data_keys[0]), data.get(cls.data_keys[1])
             transport = data.get(cls.data_keys[3])
 
-        await cls._universal(message=message, state=state, flag=key, data_key=key, reg_code=reg_code,
-                             sett_code=city_code, transport=transport, msg_cont=cls.info_date,
-                             msg_step_back=cls.info_settlement,
-                             msg_error=cls.msg_error_station,
-                             markup=await Buttons.calendar().start_calendar())
+        await cls._universal(
+            message=message,
+            state=state,
+            flag=key,
+            data_key=key,
+            reg_code=reg_code,
+            sett_code=city_code,
+            transport=transport,
+            msg_cont=cls.info_date,
+            msg_step_back=cls.info_settlement,
+            msg_error=cls.msg_error_station,
+            markup=await Buttons.calendar().start_calendar(),
+        )
 
     @classmethod
-    async def get_calendar(cls, callback_query: types.CallbackQuery,
-                           callback_data: CallbackData, state: FSMContext) -> None:
+    async def get_calendar(
+        cls,
+        callback_query: types.CallbackQuery,
+        callback_data: CallbackData,
+        state: FSMContext,
+    ) -> None:
         """
         Метод класса, обрабатывает данные виджета календаря.
         Переводит FSM бота в состояние __result.
@@ -251,14 +318,18 @@ class Command(StatesGroup):
 
         """
         if isinstance(callback_query, types.CallbackQuery):
-            selected, date = await Buttons.calendar().process_selection(callback_query, callback_data)
+            selected, date = await Buttons.calendar().process_selection(
+                callback_query, callback_data
+            )
             if selected:
-                await callback_query.message.answer(f'Указанная вами дата: <b>{date.strftime("%Y-%m-%d")}</b>',
-                                                    reply_markup=Buttons.tru_continue())
+                await callback_query.message.answer(
+                    f'Указанная вами дата: <b>{date.strftime("%Y-%m-%d")}</b>',
+                    reply_markup=Buttons.tru_continue(),
+                )
 
                 logger.info(f'Enter date > {date.strftime("%Y-%m-%d")}')
                 async with state.proxy() as data:
-                    data['date'] = date.strftime("%Y-%m-%d")
+                    data["date"] = date.strftime("%Y-%m-%d")
                 await cls.next()
 
     @classmethod
@@ -275,32 +346,47 @@ class Command(StatesGroup):
         Returns: None
 
         """
-        if message.text == Buttons.but_step_back.text:  # возвращаем бота в предыдущее FSM состояния
+        if (
+            message.text == Buttons.but_step_back.text
+        ):  # возвращаем бота в предыдущее FSM состояния
             await cls.previous()
-            await message.answer(text=cls.info_date, reply_markup=await Buttons.calendar().start_calendar())
+            await message.answer(
+                text=cls.info_date,
+                reply_markup=await Buttons.calendar().start_calendar(),
+            )
 
-        elif message.text == Buttons.but_continue.text:  # выводим ответ пользователю на его запрос.
-
+        elif (
+            message.text == Buttons.but_continue.text
+        ):  # выводим ответ пользователю на его запрос.
             async with state.proxy() as data:
-                code, date = data.get(cls.data_keys[2]), data.get('date')
-                transport, event = data.get('transport'), data.get('event')
-                query_data = f'{code}, {date}, {transport}, {event}'
+                code, date = data.get(cls.data_keys[2]), data.get("date")
+                transport, event = data.get("transport"), data.get("event")
+                query_data = f"{code}, {date}, {transport}, {event}"
 
-            result = await request(station_code=code, date=date, transport=transport, event=event)
+            result = await request(
+                station_code=code, date=date, transport=transport, event=event
+            )
 
             if result and len(result) > 1:
-                History.add_command(command='Расписание рейсов по станции', query=query_data, response=result)
+                History.add_command(
+                    command="Расписание рейсов по станции",
+                    query=query_data,
+                    response=result,
+                )
 
                 if len(result) > 4096:
                     for count in range(0, len(result), 4096):
-                        await message.answer(text=result[count: count + 4095], reply_markup=Buttons.output())
+                        await message.answer(
+                            text=result[count: count + 4095],
+                            reply_markup=Buttons.output(),
+                        )
                 else:
                     await message.answer(text=result, reply_markup=Buttons.output())
-                logger.success('Result command')
+                logger.success("Result command")
 
             else:
-                logger.error(f'Result {result}')
-                not_result = 'По Вашему запросу нет информации.'
+                logger.error(f"Result {result}")
+                not_result = "По Вашему запросу нет информации."
                 await message.answer(text=not_result, reply_markup=Buttons.output())
 
             # await state.finish()
@@ -317,11 +403,19 @@ class Command(StatesGroup):
         Returns: None
 
         """
-        dp.register_message_handler(callback=cls.start, text=Buttons.but_command_2.text, state=None)
-        dp.register_message_handler(base_stop_working, Text(Buttons.but_out.text), state='*')
-        dp.register_message_handler(callback=cls.get_event_and_type_transport, state=cls.__event_and_transport)
+        dp.register_message_handler(
+            callback=cls.start, text=Buttons.but_command_2.text, state=None
+        )
+        dp.register_message_handler(
+            base_stop_working, Text(Buttons.but_out.text), state="*"
+        )
+        dp.register_message_handler(
+            callback=cls.get_event_and_type_transport, state=cls.__event_and_transport
+        )
         dp.register_message_handler(callback=cls.region, state=cls.__region)
         dp.register_message_handler(callback=cls.settlement, state=cls.__settlement)
         dp.register_message_handler(callback=cls.station, state=cls.__station_code)
-        dp.register_callback_query_handler(cls.get_calendar, dialog_cal_callback.filter(), state=cls.__dat)
+        dp.register_callback_query_handler(
+            cls.get_calendar, dialog_cal_callback.filter(), state=cls.__dat
+        )
         dp.register_message_handler(callback=cls.result, state=cls.__result_s)

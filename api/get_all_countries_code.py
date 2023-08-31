@@ -6,7 +6,7 @@
 import requests
 import json
 import os
-from python_basic_diploma.config import YANDEX_API_KEY
+from config import YANDEX_API_KEY
 from loguru import logger
 
 
@@ -30,20 +30,15 @@ def get_code_create_file_json(path: str, api: str = YANDEX_API_KEY) -> None:
     """
 
     try:
-
-        if not os.path.basename(path).endswith('.json'):
-            raise TypeError(f'Файл {path} должен иметь расширение - .json')
-        params = {
-            'apikey': api,
-            'lang': 'ru_Ru',
-            'format': 'json'
-        }
-        url = 'https://api.rasp.yandex.net/v3.0/stations_list/'
+        if not os.path.basename(path).endswith(".json"):
+            raise TypeError(f"Файл {path} должен иметь расширение - .json")
+        params = {"apikey": api, "lang": "ru_Ru", "format": "json"}
+        url = "https://api.rasp.yandex.net/v3.0/stations_list/"
 
         req = requests.get(url=url, params=params)
 
         if req.status_code != 200:
-            raise Exception(f'Статус код ответа - {req.status_code}')
+            raise Exception(f"Статус код ответа - {req.status_code}")
 
     except TypeError as err:
         logger.exception(err)
@@ -53,7 +48,7 @@ def get_code_create_file_json(path: str, api: str = YANDEX_API_KEY) -> None:
 
     else:
         data = json.loads(req.text)
-        with open(path, 'w', encoding='utf-8') as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
 
