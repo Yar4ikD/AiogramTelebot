@@ -1,10 +1,7 @@
 <h1 align="center">Yandex Timetable Bot</h1> 
 
-Telegram bot in Python to provide information to the user about the routes and time of the movement of vehicles:
-1. Aircraft
-2. Trains
-3. Train
-4. Buses
+<h2 align="center">Telegram bot in Python to provide information to the user about the routes and time of the movement of vehicles:</h2>
+<h3 align="center">Aircraft, Trains, Buses</h3>
 
 ## Used software
 [Aiogram](https://aiogram.dev/).
