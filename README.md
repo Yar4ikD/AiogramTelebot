@@ -20,8 +20,8 @@ The bot works with API - [Yandex Timetables API.](https://yandex.ru/dev/rasp/)
 2. Get and activate the Yandex Schedules API key (used in every API request)
 3. Install dependencies from the [requirements. txt](python_basic_diploma/requirements.txt)
 ```
-venv\Scripts\activate.bat - для Windows;
-source venv/bin/activate - для Linux и MacOS.
+venv\Scripts\activate.bat - Windows;
+source venv/bin/activate - Linux и MacOS.
 ```
 ```
 pip install -r requirements.txt
